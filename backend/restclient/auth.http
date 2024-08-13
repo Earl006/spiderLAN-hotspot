@@ -1,0 +1,35 @@
+###REGISTER A USER
+POST http://localhost:3000/api/auth/register
+Content-Type: application/json
+
+{
+    "name": "John Doe",
+    "email": "johndoe@gmail.com",
+    "password":"password",
+    "phoneNumber":"+254112272250",
+    "buildingId":"20cce841-06ee-4819-aeea-16c9f3e40d63"
+}
+
+###LOGIN A USER
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+    "email": "johndoe@gmail.com",
+    "password":"password"
+}
+
+###CHANGE PASSWORD
+PUT http://localhost:3000/api/auth/change-password
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI5MzlhMzc1Zi05OTNiLTQ3NzYtOTlmNi00ZGM1MTcxMGY3NGQiLCJpYXQiOjE3MjM1NDk5MjEsImV4cCI6MTcyMzU1MzUyMX0.IBLXY0lpLVWwDqpPUGECBu5Lf78W9h36ZvCKFuymkLI
+
+{
+    "userId": "939a375f-993b-4776-99f6-4dc51710f74d",
+    "oldPassword": "password",
+    "newPassword":"12345678"
+}
+
+###GET USER BY ID
+GET http://localhost:3000/api/auth/user/939a375f-993b-4776-99f6-4dc51710f74d
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI5MzlhMzc1Zi05OTNiLTQ3NzYtOTlmNi00ZGM1MTcxMGY3NGQiLCJpYXQiOjE3MjM1NDk5MjEsImV4cCI6MTcyMzU1MzUyMX0.IBLXY0lpLVWwDqpPUGECBu5Lf78W9h36ZvCKFuymkLI
