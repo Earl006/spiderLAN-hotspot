@@ -1,0 +1,32 @@
+@baseUrl = http://localhost:3000/api/plan
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI5MzlhMzc1Zi05OTNiLTQ3NzYtOTlmNi00ZGM1MTcxMGY3NGQiLCJpYXQiOjE3MjM2MzcwOTEsImV4cCI6MTcyMzY0MDY5MX0.pk4KW158pol6xTtcbRh4Ddblvx8ygNb-it71OpWe5fM
+
+### Create a new plan
+POST {{baseUrl}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Basic Plan",
+  "duration": 30,
+  "price": 19.99,
+  "bandwidth": 10
+}
+
+### Update a plan
+PUT {{baseUrl}}/f923ec08-0260-45b5-a563-33321aac083f
+Content-Type: application/json
+
+{
+  "name": "Updated Basic Plan",
+  "price": 24.99
+}
+
+### Delete a plan
+DELETE {{baseUrl}}/f923ec08-0260-45b5-a563-33321aac083f
+
+### Get all plans
+GET {{baseUrl}}
+
+### Get a specific plan
+GET {{baseUrl}}/f923ec08-0260-45b5-a563-33321aac083f

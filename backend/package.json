@@ -28,6 +28,7 @@
     "@types/uuid": "^10.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
+    "node-routeros": "^1.6.9",
     "nodemon": "^3.1.4",
     "uuid": "^10.0.0"
   }

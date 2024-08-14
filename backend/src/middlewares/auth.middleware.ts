@@ -1,8 +1,8 @@
 // src/middleware/authMiddleware.ts
 
 import { Request, Response, NextFunction } from 'express';
+import AuthService from '../services/auth.service';
 import { verifyToken } from '../utils/jwt.utils';
-import AuthService  from '../services/auth.service';
 
 interface UserPayload {
   userId: string;
@@ -17,6 +17,8 @@ declare global {
     }
   }
 }
+
+const authService = new AuthService();
 
 export const isAuthenticated = async (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
@@ -36,13 +38,24 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
   }
 };
 
-export const isAdmin = (req: Request, res: Response, next: NextFunction) => {
-  if (req.user && req.user.isAdmin === true) {
-    next();
+export const isAdmin = async (req: Request, res: Response, next: NextFunction) => {
+  console.log('req.user:', req.user);
+
+  if (req.user) {
+    try {
+      const user = await authService.getUserById(req.user.userId); // Use instance method
+      if (user && user.isAdmin) {
+        next();
+      } else {
+        res.status(403).json({ error: 'Access denied' });
+      }
+    } catch (error) {
+      res.status(500).json({ error: 'Internal server error' });
+    }
   } else {
-    res.status(403).json({ error: 'Insufficient permissions' });
+    res.status(401).json({ error: 'Authentication required' });
   }
-}
+};
 
 export const isCurrentUser = (req: Request, res: Response, next: NextFunction) => {
   const requestedUserId = req.params.userId;

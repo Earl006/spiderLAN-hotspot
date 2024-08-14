@@ -1,0 +1,32 @@
+@baseUrl = http://localhost:3000/api/router
+
+### Add a new router
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "buildingId": "20cce841-06ee-4819-aeea-16c9f3e40d63",
+  "name": "Router 1",
+  "username": "admin",
+  "password": "password123"
+}
+
+### Update a router
+PUT {{baseUrl}}/20cce841-06ee-4819-aeea-16c9f3e40d63
+Content-Type: application/json
+
+{
+  "name": "Updated Router 1"
+}
+
+### Delete a router
+DELETE {{baseUrl}}/20cce841-06ee-4819-aeea-16c9f3e40d63
+
+### Get all routers
+GET {{baseUrl}}
+
+### Get router by id
+GET {{baseUrl}}/20cce841-06ee-4819-aeea-16c9f3e40d63
+
+### Get connected users for a router
+GET {{baseUrl}}/20cce841-06ee-4819-aeea-16c9f3e40d63/connected-users
