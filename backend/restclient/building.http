@@ -1,0 +1,26 @@
+###ADD A NEW BUILDING
+POST http://localhost:3000/api/building/add
+Content-Type: application/json
+Authorization: Bearer 
+
+{
+    "name": "MK Villas",
+    "location": "Slaugter"
+}
+
+###GET ALL BUILDINGS
+GET http://localhost:3000/api/building/
+
+###GET A BUILDING
+GET http://localhost:3000/api/building/5e9cf9b6-127b-4703-b604-2bc6bc8af6d1
+
+###UPDATE A BUILDING
+PUT http://localhost:3000/api/building/3a343709-73a0-4ae3-a296-14aa0878a443
+
+{
+    "name": "ALMAK APARTMENTS",
+    "location": "KASARANI"
+}
+
+###DELETE A BUILDING
+DELETE http://localhost:3000/api/building/7dcd4e9c-d0fd-47aa-ad73-97dd0ffbdac9

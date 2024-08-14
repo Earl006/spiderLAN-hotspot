@@ -1,0 +1,43 @@
+###UPDATE USER ACCOUNT
+PUT http://localhost:3000/api/user/939a375f-993b-4776-99f6-4dc51710f74d
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI5MzlhMzc1Zi05OTNiLTQ3NzYtOTlmNi00ZGM1MTcxMGY3NGQiLCJpYXQiOjE3MjM2MjU4OTcsImV4cCI6MTcyMzYyOTQ5N30.DCEpHYRwpKjP9cwuelQ77uutZHCPtNhMgHNFVcdHYFQ
+
+{
+    "name": "EARL JOE"
+}
+
+###GET ALL USERS
+GET http://localhost:3000/api/user/users/all
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI5MzlhMzc1Zi05OTNiLTQ3NzYtOTlmNi00ZGM1MTcxMGY3NGQiLCJpYXQiOjE3MjM2MjU4OTcsImV4cCI6MTcyMzYyOTQ5N30.DCEpHYRwpKjP9cwuelQ77uutZHCPtNhMgHNFVcdHYFQ
+
+
+###GET USER BY ID
+GET http://localhost:3000/api/user/3efe0e9b-5d3c-4825-ba6c-e1633ed9bf53
+
+###DELETE USER 
+DELETE http://localhost:3000/api/user/7d36a70f-e73f-48ea-9104-c003a1ccd47b
+
+###REQUEST PASSWORD RESET
+POST http://localhost:3000/api/user/request-password-reset
+Content-Type: application/json
+
+{
+    "phoneNumber":"+254112272250"
+}
+
+###RESET PASSWORD
+POST http://localhost:3000/api/user/reset-password
+Content-Type: application/json
+
+{
+    "resetToken":"5883",
+    "newPassword":"password"
+}
+
+###GET USERS BY BUILDING
+GET http://localhost:3000/api/user/building/5e9cf9b6-127b-4703-b604-2bc6bc8af6d1
+Authorization: Bearer
+
+###Toggle User Role
+PUT http://localhost:3000/api/user/toggle-role/939a375f-993b-4776-99f6-4dc51710f74d

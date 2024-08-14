@@ -86,6 +86,7 @@ export default class AuthService {
         },
         include: {
             building: true,
+            subscriptions: true,
         }
     });
     if (!user) {
