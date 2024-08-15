@@ -66,6 +66,8 @@ model Router {
   buildingId String
   name      String
   ip        String
+  username  String
+  password  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   building  Building @relation(fields: [buildingId], references: [id])

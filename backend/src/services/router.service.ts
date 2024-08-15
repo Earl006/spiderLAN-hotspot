@@ -1,43 +1,51 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Router } from '@prisma/client';
 import RouterManager from '../bg-services/router.manager';
 
 const prisma = new PrismaClient();
 
 class RouterService {
-  private routerManager: RouterManager;
+  private routerManager: RouterManager | null = null;
 
-  constructor() {
-    // Initialize with default values, these will be overwritten when a router is selected
-    this.routerManager = new RouterManager('192.168.88.1', '', '');
+  private async initializeRouterManager(router: Router): Promise<void> {
+    this.routerManager = new RouterManager(router.ip, router.username, router.password);
+    await this.routerManager.connect();
   }
 
-  async addRouter(buildingId: string, name: string, username: string, password: string): Promise<any> {
+  private async closeRouterManagerConnection(): Promise<void> {
+    if (this.routerManager) {
+      await this.routerManager.disconnect();
+      this.routerManager = null;
+    }
+  }
+
+  async addRouter(buildingId: string, name: string, ip: string = '192.168.88.1', username: string, password: string) {
     try {
       const router = await prisma.router.create({
         data: {
           buildingId,
           name,
-          ip: '192.168.88.1', // Using the default MikroTik management IP
+          ip,
+          username,
+          password,
         },
       });
 
-      // Initialize RouterManager with the new router's credentials
-      this.routerManager = new RouterManager('192.168.88.1', username, password);
-      await this.routerManager.connect();
+      await this.initializeRouterManager(router);
 
-      // Setup hotspot configurations
-      await this.routerManager.setupHotspotConfigurations();
-
-      await this.routerManager.disconnect();
+      if (this.routerManager) {
+        await this.routerManager.setupHotspotConfigurations();
+      }
 
       return router;
     } catch (error) {
       console.error('Failed to add router:', error);
       throw error;
+    } finally {
+      await this.closeRouterManagerConnection();
     }
   }
 
-  async updateRouter(id: string, data: { name?: string }): Promise<any> {
+  async updateRouter(id: string, data: { name?: string; ip?: string; username?: string; password?: string }) {
     try {
       return await prisma.router.update({
         where: { id },
@@ -49,7 +57,7 @@ class RouterService {
     }
   }
 
-  async deleteRouter(id: string): Promise<any> {
+  async deleteRouter(id: string) {
     try {
       return await prisma.router.delete({
         where: { id },
@@ -60,7 +68,7 @@ class RouterService {
     }
   }
 
-  async getAllRouters(): Promise<any> {
+  async getAllRouters() {
     try {
       return await prisma.router.findMany();
     } catch (error) {
@@ -69,7 +77,7 @@ class RouterService {
     }
   }
 
-  async getRouterById(id: string): Promise<any> {
+  async getRouterById(id: string) {
     try {
       return await prisma.router.findUnique({
         where: { id },
@@ -80,24 +88,37 @@ class RouterService {
     }
   }
 
-  async getConnectedUsers(routerId: string): Promise<string[]> {
+  async getRouterByBuildingId(buildingId: string) {
+    try {
+      return await prisma.router.findFirst({
+        where: { buildingId },
+      });
+    } catch (error) {
+      console.error('Failed to get router by building ID:', error);
+      throw error;
+    }
+  }
+
+  async getConnectedUsers(routerId: string) {
     try {
       const router = await this.getRouterById(routerId);
       if (!router) {
         throw new Error('Router not found');
       }
 
-      this.routerManager = new RouterManager('192.168.88.1', 'admin', 'password'); // You'll need to store and retrieve the actual username and password securely
-      await this.routerManager.connect();
+      await this.initializeRouterManager(router);
 
-      const connectedUsers = await this.routerManager.getConnectedPaidUsers();
-
-      await this.routerManager.disconnect();
-
-      return connectedUsers;
+      if (this.routerManager) {
+        const connectedUsers = await this.routerManager.getConnectedUsers();
+        return connectedUsers;
+      } else {
+        throw new Error('RouterManager not initialized');
+      }
     } catch (error) {
       console.error('Failed to get connected users:', error);
       throw error;
+    } finally {
+      await this.closeRouterManagerConnection();
     }
   }
 }

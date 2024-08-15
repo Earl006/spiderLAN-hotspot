@@ -36,7 +36,6 @@ class RouterManager {
     try {
       await this.connection.write('/ip/hotspot/active/add', [
         `=mac-address=${clientMac}`,
-        '=comment=paid',
       ]);
       console.log(`Access enabled for client: ${clientMac}`);
     } catch (error) {
@@ -65,38 +64,12 @@ class RouterManager {
     }
   }
 
-  async redirectToPaymentPage(clientMac: string, paymentUrl: string): Promise<void> {
+  async getConnectedUsers(): Promise<string[]> {
     try {
-      const hostname = new URL(paymentUrl).hostname;
-      
-      await this.connection.write('/ip/hotspot/walled-garden/ip/add', [
-        '=action=accept',
-        `=dst-host=${hostname}`,
-        '=comment=payment page',
-      ]);
-
-      await this.connection.write('/ip/hotspot/user/add', [
-        `=name=${clientMac}`,
-        `=mac-address=${clientMac}`,
-        '=profile=redirect-to-payment',
-      ]);
-
-      console.log(`Client ${clientMac} redirected to payment page`);
-    } catch (error) {
-      console.error(`Failed to redirect client ${clientMac} to payment page:`, error);
-      throw error;
-    }
-  }
-
-  async getConnectedPaidUsers(): Promise<string[]> {
-    try {
-      const activeUsers = await this.connection.write('/ip/hotspot/active/print', [
-        '?comment=paid',
-      ]);
-      
+      const activeUsers = await this.connection.write('/ip/hotspot/active/print');
       return activeUsers.map(user => user['mac-address']);
     } catch (error) {
-      console.error('Failed to get connected paid users:', error);
+      console.error('Failed to get connected users:', error);
       throw error;
     }
   }
@@ -154,13 +127,6 @@ class RouterManager {
         '=address-pool=hs-pool-1',
         '=profile=hsprof1',
         '=addresses-per-mac=2',
-      ]);
-
-      // Set up walled garden for payment gateway (adjust as needed)
-      await this.connection.write('/ip/hotspot/walled-garden/ip/add', [
-        '=action=accept',
-        '=dst-host=payment.example.com',
-        '=comment=payment gateway',
       ]);
 
       console.log('Hotspot configurations set up successfully');
