@@ -21,13 +21,17 @@
     "typescript": "^5.5.4"
   },
   "dependencies": {
+    "@nestjs/common": "^10.4.1",
     "@prisma/client": "^5.16.0",
+    "@types/axios": "^0.14.0",
     "@types/cors": "^2.8.17",
     "@types/dotenv": "^8.2.0",
     "@types/nodemon": "^1.19.6",
     "@types/uuid": "^10.0.0",
+    "axios": "^1.7.4",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
+    "intasend-node": "^1.1.1",
     "node-routeros": "^1.6.9",
     "nodemon": "^3.1.4",
     "uuid": "^10.0.0"

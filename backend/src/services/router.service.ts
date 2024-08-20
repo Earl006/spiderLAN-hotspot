@@ -34,6 +34,7 @@ class RouterService {
 
       if (this.routerManager) {
         await this.routerManager.setupHotspotConfigurations();
+        await this.routerManager.configureHotspotRedirect('https://example.com');
       }
 
       return router;

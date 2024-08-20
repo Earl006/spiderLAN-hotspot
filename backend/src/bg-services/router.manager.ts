@@ -74,6 +74,26 @@ class RouterManager {
     }
   }
 
+  async configureHotspotRedirect(loginPage: string): Promise<void> {
+    try {
+      await this.connection.write('/ip/hotspot/profile/set', [
+        '=numbers=default',
+        `=login-by=http-chap`,
+        `=html-directory=hotspot`,
+        `=http-cookie-lifetime=3d`,
+        `=login-by=cookie,http-chap`,
+        `=http-proxy=0.0.0.0`,
+        `=https-redirect=yes`,
+        `=ssl-certificate=none`,
+        `=login-url=${loginPage}`,
+      ]);
+      console.log('Hotspot redirect configured successfully');
+    } catch (error) {
+      console.error('Failed to configure hotspot redirect:', error);
+      throw error;
+    }
+  }
+
   async setupHotspotConfigurations(): Promise<void> {
     try {
       // Create a bridge for the hotspot

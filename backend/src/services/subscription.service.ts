@@ -3,7 +3,7 @@ import RouterManager from '../bg-services/router.manager';
 
 const prisma = new PrismaClient();
 
-class SubscriptionService {
+export default class SubscriptionService {
   private routerManager: RouterManager | null = null;
 
   private async initializeRouterManager(router: Router): Promise<void> {
@@ -141,4 +141,3 @@ class SubscriptionService {
   }
 }
 
-export default new SubscriptionService();
