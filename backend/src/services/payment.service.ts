@@ -1,4 +1,3 @@
-// payment.service.ts
 import { PrismaClient } from '@prisma/client';
 import IntaSend from 'intasend-node';
 import SubscriptionService from '../services/subscription.service';
@@ -28,7 +27,7 @@ export class PaymentService {
       const user = await this.prisma.user.findUnique({ where: { id: userId } });
       if (!user) throw new Error('User not found');
 
-      // Initiate payment using Intasend SDK
+      // Initiate payment using IntaSend SDK
       const response = await this.intasend.collection().mpesaStkPush({
         first_name: user.name ? user.name.split(' ')[0] : '',
         last_name: user.name ? user.name.split(' ')[1] || '' : '',
@@ -50,7 +49,15 @@ export class PaymentService {
         },
       });
 
-      // Redirect user to the payment URL to complete payment
+      // Automate status check after a delay (e.g., 60 seconds)
+      setTimeout(async () => {
+        try {
+          await this.checkPaymentStatus(response.invoice.invoice_id);
+        } catch (error) {
+          console.error('Error during automated status check:', error);
+        }
+      }, 60000); // 60 seconds delay
+
       return { paymentResponse: response, message: 'Payment initiated successfully', paymentId: payment.id };
     } catch (error) {
       // Save the failed payment attempt
@@ -68,39 +75,53 @@ export class PaymentService {
     }
   }
 
-  async createSubscriptionFromPayment(planId: string, userId: string, paymentId: string) {
+  // Method to check payment status and update accordingly
+  private async checkPaymentStatus(invoiceId: string) {
     try {
-      const payment = await this.prisma.payment.findUnique({ where: { id: paymentId } });
-      if (!payment) throw new Error('Payment not found');
-  
-      let paymentStatus;
-      try {
-        paymentStatus = await this.intasend.collection().status(payment.invoiceId);
-        console.log(`Status Resp:`, paymentStatus);
-      } catch (error) {
-        console.error(`Status Resp error:`, error);
-        throw new Error('Failed to get payment status');
-      }
-  
+      const paymentStatus = await this.intasend.collection().status(invoiceId);
+
       if (paymentStatus.invoice.state === 'COMPLETE') {
-        await this.subscriptionService.createSubscription(userId, planId);
-  
-        // Update the payment status in the database
+        await this.createSubscriptionFromPayment(invoiceId);
+      } else if (paymentStatus.invoice.state === 'CANCELLED') {
         await this.prisma.payment.update({
-          where: { id: paymentId },
-          data: { status: 'SUCCESS' },
+          where: { invoiceId },
+          data: { status: 'FAILED' },
         });
-  
-        return { message: 'Subscription created successfully' };
+        console.log('Payment was cancelled.');
       } else {
-        // Update the payment status in the database
+        // Update the payment status in the database for any other state
         await this.prisma.payment.update({
-          where: { id: paymentId },
+          where: { invoiceId },
           data: { status: paymentStatus.invoice.state },
         });
-  
-        return { message: `Payment status: ${paymentStatus.invoice.state}` };
+        console.log(`Payment status updated to: ${paymentStatus.invoice.state}`);
       }
+    } catch (error) {
+      console.error('Error checking payment status:', error);
+      await this.prisma.payment.update({
+        where: { invoiceId },
+        data: { status: 'FAILED', errorMessage: error instanceof Error ? error.message : 'Unknown error' },
+      });
+    }
+  }
+
+  // Method to create a subscription if payment is successful
+  private async createSubscriptionFromPayment(invoiceId: string) {
+    try {
+      const payment = await this.prisma.payment.findUnique({ where: { invoiceId } });
+      if (!payment) throw new Error('Payment not found');
+
+      const { planId, userId } = payment;
+
+      await this.subscriptionService.createSubscription(userId, planId);
+
+      // Update the payment status in the database to SUCCESS
+      await this.prisma.payment.update({
+        where: { invoiceId },
+        data: { status: 'SUCCESS' },
+      });
+
+      console.log('Subscription created successfully.');
     } catch (error) {
       console.error('Error creating subscription from payment:', error);
       throw new Error('Failed to create subscription from payment');

@@ -76,7 +76,7 @@ model Payment {
   amount            Decimal
   status            String   // e.g., 'PENDING', 'SUCCESS', 'FAILED'
   errorMessage      String?
-  invoiceId         String?
+  invoiceId         String?  @unique
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
   user              User     @relation(fields: [userId], references: [id])

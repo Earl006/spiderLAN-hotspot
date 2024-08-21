@@ -1,4 +1,4 @@
-### Initiate Payment
+### Initiate Payment and create subscription
 POST http://localhost:3000/api/payment/initiate
 Content-Type: application/json
 
@@ -6,14 +6,4 @@ Content-Type: application/json
   "planId": "f923ec08-0260-45b5-a563-33321aac083f",
   "userId": "939a375f-993b-4776-99f6-4dc51710f74d",
   "phoneNumber": "254112272250"
-}
-
-### CREATE SUBSCRIPTION
-POST http://localhost:3000/api/payment/create-subscription
-Content-Type: application/json
-
-{
-  "planId": "f923ec08-0260-45b5-a563-33321aac083f",
-  "userId": "939a375f-993b-4776-99f6-4dc51710f74d",
-  "paymentId": "2a9590c6-40b5-4fd9-bb37-f26de4bcb938"
 }
