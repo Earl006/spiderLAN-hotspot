@@ -1,5 +1,5 @@
 @baseUrl = http://localhost:3000/api/plan
-@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI5MzlhMzc1Zi05OTNiLTQ3NzYtOTlmNi00ZGM1MTcxMGY3NGQiLCJpYXQiOjE3MjM2MzcwOTEsImV4cCI6MTcyMzY0MDY5MX0.pk4KW158pol6xTtcbRh4Ddblvx8ygNb-it71OpWe5fM
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI5MzlhMzc1Zi05OTNiLTQ3NzYtOTlmNi00ZGM1MTcxMGY3NGQiLCJpYXQiOjE3MjQyNjY2NjgsImV4cCI6MTcyNDI3MDI2OH0.w_QKRT9ATt9az2Vrfe0nOe3kTZXyroPRGK7g0YwWsEc
 
 ### Create a new plan
 POST {{baseUrl}}
@@ -7,9 +7,9 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-  "name": "Basic Plan",
+  "name": "The Plan",
   "duration": 30,
-  "price": 19.99,
+  "price": 5.00,
   "bandwidth": 10
 }
 

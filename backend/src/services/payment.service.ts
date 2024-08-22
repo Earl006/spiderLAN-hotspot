@@ -49,16 +49,10 @@ export class PaymentService {
         },
       });
 
-      // Automate status check after a delay (e.g., 60 seconds)
-      setTimeout(async () => {
-        try {
-          await this.checkPaymentStatus(response.invoice.invoice_id);
-        } catch (error) {
-          console.error('Error during automated status check:', error);
-        }
-      }, 60000); // 60 seconds delay
+      // Start checking payment status
+      const result = await this.checkPaymentStatusRecursive(response.invoice.invoice_id);
 
-      return { paymentResponse: response, message: 'Payment initiated successfully', paymentId: payment.id };
+      return { paymentResponse: response, message: result.message, paymentId: payment.id };
     } catch (error) {
       // Save the failed payment attempt
       await this.prisma.payment.create({
@@ -75,37 +69,49 @@ export class PaymentService {
     }
   }
 
-  // Method to check payment status and update accordingly
-  private async checkPaymentStatus(invoiceId: string) {
+  private async checkPaymentStatusRecursive(invoiceId: string, attempts: number = 0): Promise<{ status: string, message: string }> {
+    if (attempts >= 5) { // 5 attempts * 60 seconds = 5 minutes
+      await this.updatePaymentStatus(invoiceId, 'FAILED', 'Timeout after 5 minutes');
+      return { status: 'FAILED', message: 'Payment failed: Timeout after 5 minutes' };
+    }
+
     try {
       const paymentStatus = await this.intasend.collection().status(invoiceId);
 
-      if (paymentStatus.invoice.state === 'COMPLETE') {
-        await this.createSubscriptionFromPayment(invoiceId);
-      } else if (paymentStatus.invoice.state === 'CANCELLED') {
-        await this.prisma.payment.update({
-          where: { invoiceId },
-          data: { status: 'FAILED' },
-        });
-        console.log('Payment was cancelled.');
-      } else {
-        // Update the payment status in the database for any other state
-        await this.prisma.payment.update({
-          where: { invoiceId },
-          data: { status: paymentStatus.invoice.state },
-        });
-        console.log(`Payment status updated to: ${paymentStatus.invoice.state}`);
+      switch (paymentStatus.invoice.state) {
+        case 'COMPLETE':
+          await this.createSubscriptionFromPayment(invoiceId);
+          return { status: 'COMPLETE', message: 'Payment successful and subscription created' };
+        case 'FAILED':
+          await this.updatePaymentStatus(invoiceId, 'FAILED', paymentStatus.invoice.failed_reason);
+          return { status: 'FAILED', message: `Payment failed: ${paymentStatus.invoice.failed_reason}` };
+        case 'PENDING':
+        case 'PROCESSING':
+          // Wait for 60 seconds before checking again
+          await new Promise(resolve => setTimeout(resolve, 60000));
+          return this.checkPaymentStatusRecursive(invoiceId, attempts + 1);
+        default:
+          await this.updatePaymentStatus(invoiceId, paymentStatus.invoice.state);
+          return { status: paymentStatus.invoice.state, message: `Payment status: ${paymentStatus.invoice.state}` };
       }
     } catch (error) {
       console.error('Error checking payment status:', error);
-      await this.prisma.payment.update({
-        where: { invoiceId },
-        data: { status: 'FAILED', errorMessage: error instanceof Error ? error.message : 'Unknown error' },
-      });
+      await this.updatePaymentStatus(invoiceId, 'FAILED', error instanceof Error ? error.message : 'Unknown error');
+      return { status: 'FAILED', message: 'Payment failed due to an error' };
     }
   }
 
-  // Method to create a subscription if payment is successful
+  private async updatePaymentStatus(invoiceId: string, status: string, errorMessage?: string) {
+    await this.prisma.payment.update({
+      where: { invoiceId },
+      data: { 
+        status,
+        errorMessage: errorMessage || undefined
+      },
+    });
+    console.log(`Payment status updated to: ${status}`);
+  }
+
   private async createSubscriptionFromPayment(invoiceId: string) {
     try {
       const payment = await this.prisma.payment.findUnique({ where: { invoiceId } });
@@ -115,16 +121,12 @@ export class PaymentService {
 
       await this.subscriptionService.createSubscription(userId, planId);
 
-      // Update the payment status in the database to SUCCESS
-      await this.prisma.payment.update({
-        where: { invoiceId },
-        data: { status: 'SUCCESS' },
-      });
+      await this.updatePaymentStatus(invoiceId, 'SUCCESS');
 
       console.log('Subscription created successfully.');
     } catch (error) {
       console.error('Error creating subscription from payment:', error);
-      throw new Error('Failed to create subscription from payment');
+      await this.updatePaymentStatus(invoiceId, 'FAILED', 'Failed to create subscription');
     }
   }
 }
