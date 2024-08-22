@@ -80,8 +80,9 @@ export class PaymentService {
 
       switch (paymentStatus.invoice.state) {
         case 'COMPLETE':
+          await this.updatePaymentStatus(invoiceId, 'SUCCESS');
           await this.createSubscriptionFromPayment(invoiceId);
-          return { status: 'COMPLETE', message: 'Payment successful and subscription created' };
+          return { status: 'SUCCESS', message: 'Payment successful and subscription created' };
         case 'FAILED':
           await this.updatePaymentStatus(invoiceId, 'FAILED', paymentStatus.invoice.failed_reason);
           return { status: 'FAILED', message: `Payment failed: ${paymentStatus.invoice.failed_reason}` };
@@ -120,8 +121,6 @@ export class PaymentService {
       const { planId, userId } = payment;
 
       await this.subscriptionService.createSubscription(userId, planId);
-
-      await this.updatePaymentStatus(invoiceId, 'SUCCESS');
 
       console.log('Subscription created successfully.');
     } catch (error) {
