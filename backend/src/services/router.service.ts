@@ -1,15 +1,16 @@
 import { PrismaClient, Router } from '@prisma/client';
 import RouterManager from '../bg-services/router.manager';
+import path from 'node:path';
 
 const prisma = new PrismaClient();
 
 class RouterService {
   private routerManager: RouterManager | null = null;
 
-  private async initializeRouterManager(router: Router): Promise<void> {
-    this.routerManager = new RouterManager(router.ip, router.username, router.password);
-    await this.routerManager.connect();
-  }
+  private async initializeRouterManager(router: { id?: string; buildingId: string; name: string; ip: string; username: string; password: string; createdAt?: Date; updatedAt?: Date; }): Promise<void> {
+        this.routerManager = new RouterManager(router.ip, router.username, router.password);
+        await this.routerManager.connect();
+    }
 
   private async closeRouterManagerConnection(): Promise<void> {
     if (this.routerManager) {
@@ -18,9 +19,41 @@ class RouterService {
     }
   }
 
-  async addRouter(buildingId: string, name: string, ip: string = '192.168.88.1', username: string, password: string) {
+  async addRouter(
+    buildingId: string,
+    name: string,
+    ip: string = '192.168.88.1',
+    username: string,
+    password: string
+  ) {
+    let router;
     try {
-      const router = await prisma.router.create({
+      router = { buildingId, name, ip, username, password };
+      await this.initializeRouterManager(router);
+  
+      if (this.routerManager) {
+        try {
+          // Setup hotspot configurations
+          await this.routerManager.setupHotspotConfigurations();
+          console.log('Hotspot configurations completed successfully');
+  
+          // Upload template
+          const templatePath = path.join(__dirname, '../bg-services/templates/login.html');
+          await this.routerManager.uploadHotspotTemplate(templatePath);
+          console.log('Template uploaded successfully');
+  
+          // Configure hotspot redirect and set SSID
+          // await this.routerManager.configureHotspotSettings('SPIDERLAN', '/hotspot/login.html');
+          // console.log('Hotspot settings configured');
+  
+        } catch (setupError) {
+          console.error('Error setting up router:', setupError);
+          throw setupError;
+        }
+      }
+  
+      // Save to database
+      router = await prisma.router.create({
         data: {
           buildingId,
           name,
@@ -29,14 +62,8 @@ class RouterService {
           password,
         },
       });
-
-      await this.initializeRouterManager(router);
-
-      if (this.routerManager) {
-        await this.routerManager.setupHotspotConfigurations();
-        await this.routerManager.configureHotspotRedirect('https://example.com');
-      }
-
+  
+      console.log('Router added to database successfully');
       return router;
     } catch (error) {
       console.error('Failed to add router:', error);

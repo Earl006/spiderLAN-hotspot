@@ -1,14 +1,16 @@
 @baseUrl = http://localhost:3000/api/router
+@authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI5MzlhMzc1Zi05OTNiLTQ3NzYtOTlmNi00ZGM1MTcxMGY3NGQiLCJpYXQiOjE3MjQ0MjYxNzAsImV4cCI6MTcyNDQyOTc3MH0.sWRC_8SfQybNn-IJsLATdkiwe3YaVY5JOV20M1fwjTc
 
 ### Add a new router
 POST {{baseUrl}}
 Content-Type: application/json
+Authorization: Bearer {{authToken}}
 
 {
   "buildingId": "20cce841-06ee-4819-aeea-16c9f3e40d63",
   "name": "Router 1",
   "username": "admin",
-  "password": "password123"
+  "password": "eaw111hh"
 }
 
 ### Update a router

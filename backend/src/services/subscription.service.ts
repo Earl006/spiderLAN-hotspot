@@ -24,7 +24,7 @@ export default class SubscriptionService {
       if (!plan) throw new Error('Plan not found');
 
       const now = new Date();
-      const endDate = new Date(now.getTime() + plan.duration * 1000); // Assuming duration is in seconds
+      const endDate = new Date(now.getTime() + plan.duration * 1000);
 
       const subscription = await prisma.subscription.create({
         data: {
@@ -46,8 +46,9 @@ export default class SubscriptionService {
 
       await this.initializeRouterManager(router);
 
-      // Enable internet access for the user
-      await this.routerManager!.enableAccess(user.id); // Or use a unique identifier for the user
+      // Assign IP address and enable internet access for the user
+      const assignedIP = await this.routerManager!.assignIPAddress(userId);
+      await this.routerManager!.enableAccess(userId);
 
       await this.closeRouterManagerConnection();
 
@@ -57,7 +58,6 @@ export default class SubscriptionService {
       throw error;
     }
   }
-
   async checkAndDisableExpiredSubscriptions(): Promise<void> {
     try {
       const expiredSubscriptions = await prisma.subscription.findMany({

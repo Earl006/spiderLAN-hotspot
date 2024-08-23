@@ -1,4 +1,6 @@
 import { RouterOSAPI } from 'node-routeros';
+import * as fs from 'fs';
+import * as path from 'path';
 
 class RouterManager {
   public connection: RouterOSAPI;
@@ -28,38 +30,6 @@ class RouterManager {
       console.log('Disconnected from MikroTik router');
     } catch (error) {
       console.error('Failed to disconnect from MikroTik router:', error);
-      throw error;
-    }
-  }
-
-  async enableAccess(clientMac: string): Promise<void> {
-    try {
-      await this.connection.write('/ip/hotspot/active/add', [
-        `=mac-address=${clientMac}`,
-      ]);
-      console.log(`Access enabled for client: ${clientMac}`);
-    } catch (error) {
-      console.error(`Failed to enable access for client ${clientMac}:`, error);
-      throw error;
-    }
-  }
-
-  async disableAccess(clientMac: string): Promise<void> {
-    try {
-      const activeUsers = await this.connection.write('/ip/hotspot/active/print', [
-        `?mac-address=${clientMac}`,
-      ]);
-      
-      if (activeUsers.length > 0) {
-        await this.connection.write('/ip/hotspot/active/remove', [
-          `=.id=${activeUsers[0]['.id']}`,
-        ]);
-        console.log(`Access disabled for client: ${clientMac}`);
-      } else {
-        console.log(`Client ${clientMac} not found in active users`);
-      }
-    } catch (error) {
-      console.error(`Failed to disable access for client ${clientMac}:`, error);
       throw error;
     }
   }
@@ -153,6 +123,119 @@ class RouterManager {
   //   }
   // }
 
+  async assignIPAddress(userId: string): Promise<string> {
+    try {
+      const ipPool = await this.connection.write('/ip/pool/print', [
+        '=name=hs-pool-1',
+      ]);
+      
+      if (ipPool.length === 0) {
+        throw new Error('IP pool not found');
+      }
+
+      const ranges = ipPool[0].ranges.split(',');
+      const [startIP, endIP] = ranges[0].split('-');
+
+      // Find the next available IP
+      const usedIPs = await this.connection.write('/ip/dhcp-server/lease/print');
+      let nextIP = startIP;
+
+      while (nextIP <= endIP) {
+        if (!usedIPs.some(lease => lease.address === nextIP)) {
+          break;
+        }
+        nextIP = this.incrementIP(nextIP);
+      }
+
+      if (nextIP > endIP) {
+        throw new Error('No available IP addresses');
+      }
+
+      // Assign the IP to the user
+      await this.connection.write('/ip/dhcp-server/lease/add', [
+        `=address=${nextIP}`,
+        `=mac-address=00:00:00:00:00:00`, // Dummy MAC address
+        `=comment=User:${userId}`,
+      ]);
+
+      console.log(`IP ${nextIP} assigned to user ${userId}`);
+      return nextIP;
+    } catch (error) {
+      console.error(`Failed to assign IP address for user ${userId}:`, error);
+      throw error;
+    }
+  }
+
+  async enableAccess(userId: string): Promise<void> {
+    try {
+      const lease = await this.findLeaseByUserId(userId);
+      if (!lease) {
+        throw new Error(`No IP address assigned to user ${userId}`);
+      }
+
+      await this.connection.write('/ip/firewall/address-list/add', [
+        '=list=allowed_users',
+        `=address=${lease.address}`,
+      ]);
+      console.log(`Access enabled for user ${userId} with IP ${lease.address}`);
+    } catch (error) {
+      console.error(`Failed to enable access for user ${userId}:`, error);
+      throw error;
+    }
+  }
+
+  async disableAccess(userId: string): Promise<void> {
+    try {
+      const lease = await this.findLeaseByUserId(userId);
+      if (!lease) {
+        console.log(`No IP address assigned to user ${userId}`);
+        return;
+      }
+
+      const addressListEntry = await this.connection.write('/ip/firewall/address-list/print', [
+        '=list=allowed_users',
+        `?address=${lease.address}`,
+      ]);
+
+      if (addressListEntry.length > 0) {
+        await this.connection.write('/ip/firewall/address-list/remove', [
+          `=.id=${addressListEntry[0]['.id']}`,
+        ]);
+        console.log(`Access disabled for user ${userId} with IP ${lease.address}`);
+      } else {
+        console.log(`User ${userId} with IP ${lease.address} not found in allowed users`);
+      }
+    } catch (error) {
+      console.error(`Failed to disable access for user ${userId}:`, error);
+      throw error;
+    }
+  }
+
+  private async findLeaseByUserId(userId: string): Promise<{ address: string } | null> {
+    const leases = await this.connection.write('/ip/dhcp-server/lease/print', [
+      `?comment=User:${userId}`,
+    ]);
+    return leases.length > 0 ? { address: leases[0].address } : null;
+  }
+
+  private incrementIP(ip: string): string {
+    const parts = ip.split('.').map(Number);
+    parts[3]++;
+    if (parts[3] > 255) {
+      parts[3] = 0;
+      parts[2]++;
+      if (parts[2] > 255) {
+        parts[2] = 0;
+        parts[1]++;
+        if (parts[1] > 255) {
+          parts[1] = 0;
+          parts[0]++;
+        }
+      }
+    }
+    return parts.join('.');
+  }
+
   async setupHotspotConfigurations(): Promise<void> {
     try {
       console.log('Starting hotspot configuration setup...');
@@ -240,6 +323,81 @@ class RouterManager {
       throw error;
     }
   }
+
+  async configureHotspotSettings(ssid: string, loginPage: string): Promise<void> {
+    try {
+      console.log('Configuring hotspot settings...');
+  
+      // Configure hotspot profile
+      await this.connection.write('/ip/hotspot/profile/set', [
+        '=numbers=hsprof1',
+        '=login-by=cookie,http-chap,http-pap,mac-cookie',
+        '=html-directory=hotspot',
+        '=http-cookie-lifetime=3d',
+      ]);
+  
+      // Set login page separately
+      await this.connection.write('/ip/hotspot/profile/set', [
+        '=numbers=hsprof1',
+        `=login-page=${loginPage}`,
+      ]);
+  
+      // Set SSID for the hotspot
+      await this.connection.write('/ip/hotspot/set', [
+        '=name=SPIDERLAN',
+        `=hotspot-address=${ssid}`,
+        '=disabled=no',
+        
+      ]);
+  
+      console.log('Hotspot settings configured successfully');
+    } catch (error: any) {
+      console.error('Failed to configure hotspot settings:', error);
+      if (error.response && error.response.data) {
+        console.error('Error details:', error.response.data);
+      }
+      throw error;
+    }
+  }
+
+  async uploadHotspotTemplate(templatePath: string): Promise<void> {
+    try {
+      console.log('Uploading hotspot template...');
+      const content = await fs.promises.readFile(templatePath, 'utf8');
+      const fileName = path.basename(templatePath);
+  
+      // Remove existing file if it exists
+      await this.connection.write('/file/remove', [
+        `=numbers=hotspot/${fileName}`,
+      ]);
+  
+      // Create the new file
+      await this.connection.write('/file/add', [
+        `=name=hotspot/${fileName}`,
+        `=contents=${content}`,
+      ]);
+  
+      console.log('Hotspot template uploaded successfully');
+  
+      // Verify the file was created
+      const files = await this.connection.write('/file/print', [
+        `?name=hotspot/${fileName}`,
+      ]);
+  
+      if (files.length === 0) {
+        throw new Error('File was not created successfully');
+      }
+  
+      console.log('File verified in RouterOS');
+    } catch (error: any) {
+      console.error('Failed to upload hotspot template:', error);
+      if (error.response && error.response.data) {
+        console.error('Error details:', error.response.data);
+      }
+      throw error;
+    }
+  }
 }
+  
 
 export default RouterManager;
