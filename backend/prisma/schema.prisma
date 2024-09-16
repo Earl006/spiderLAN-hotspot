@@ -8,21 +8,24 @@ datasource db {
 }
 
 model User {
-  id            String       @id @default(uuid())
-  email         String       @unique
-  name          String?
-  password      String
-  phoneNumber   String       @unique
-  buildingId    String
-  isAdmin       Boolean      @default(false)
-  resetToken    String?
+  id               String       @id @default(uuid())
+  email            String       @unique
+  name             String?
+  password         String
+  phoneNumber      String       @unique
+  buildingId       String
+  isAdmin          Boolean      @default(false)
+  resetToken       String?
   resetTokenExpiry DateTime?
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-  building      Building     @relation(fields: [buildingId], references: [id])
-  subscriptions  Subscription[]
-  payments      Payment[]
+  ipAddress        String?
+  macAddress       String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  building         Building     @relation(fields: [buildingId], references: [id])
+  subscriptions    Subscription[]
+  payments         Payment[]
 }
+
 
 model Building {
   id            String       @id @default(uuid())

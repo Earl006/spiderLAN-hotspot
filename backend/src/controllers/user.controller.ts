@@ -1,6 +1,7 @@
 import { resetPassword, getAllUsers, getUser, updateUser, deleteUser,getUsersByBuilding,toggleUserRole, requestPasswordReset } from "../services/user.service";
 import { Request, Response } from "express";
 
+
 export class UserController {
     async getAllUsers(req: Request, res: Response) {
         try {

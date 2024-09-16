@@ -1,16 +1,15 @@
 @baseUrl = http://localhost:3000/api/router
-@authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI5MzlhMzc1Zi05OTNiLTQ3NzYtOTlmNi00ZGM1MTcxMGY3NGQiLCJpYXQiOjE3MjQ0OTA4NzksImV4cCI6MTcyNDQ5NDQ3OX0.d3sGqmaV9-FfY1WMVD011wnQik8H9zeCV2t00brkVHw
-
+@authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJmZDk0ZGQ1Ni1jYmIxLTRmZDItYjllMi05MWIyYTMzMjdlZjAiLCJpYXQiOjE3MjY1MDA4MDEsImV4cCI6MTcyNjUwNDQwMX0.d9FRCYeuZxiw2raIMK7FJqfVvGlsWL5cHrrekIc4QkA
 ### Add a new router
 POST {{baseUrl}}
 Content-Type: application/json
 Authorization: Bearer {{authToken}}
 
 {
-  "buildingId": "20cce841-06ee-4819-aeea-16c9f3e40d63",
+  "buildingId": "4be3a734-bc72-48fc-b6fa-612629c5046a",
   "name": "Router 1",
   "username": "admin",
-  "password": "eaw111hh"
+  "password": "marshalsql"
 }
 
 ### Update a router

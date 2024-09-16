@@ -3,11 +3,11 @@ POST http://localhost:3000/api/auth/register
 Content-Type: application/json
 
 {
-    "name": "John Doe",
-    "email": "johndoe@gmail.com",
-    "password":"password",
-    "phoneNumber":"+254112272250",
-    "buildingId":"20cce841-06ee-4819-aeea-16c9f3e40d63"
+    "name": "Emanuel",
+    "email": "marshcodes@gmail.com",
+    "password":"pass",
+    "phoneNumber":"+25470000000",
+    "buildingId":"4be3a734-bc72-48fc-b6fa-612629c5046a"
 }
 
 ###LOGIN A USER
@@ -15,8 +15,8 @@ POST http://localhost:3000/api/auth/login
 Content-Type: application/json
 
 {
-    "email": "johndoe@gmail.com",
-    "password":"12345678"
+    "email": "marshcodes@gmail.com",
+    "password":"pass"
 }
 
 ###CHANGE PASSWORD
