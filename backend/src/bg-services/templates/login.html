@@ -1,140 +1,17 @@
-<!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SPIDERLAN HOTSPOT</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        .container {
-            background-color: white;
-            padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            max-width: 400px;
-            width: 100%;
-        }
-        h1 {
-            color: #333;
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-        form {
-            display: flex;
-            flex-direction: column;
-        }
-        input {
-            margin-bottom: 1rem;
-            padding: 0.5rem;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 0.5rem;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        .plans {
-            margin-top: 2rem;
-        }
-        .plan {
-            background-color: #f9f9f9;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            padding: 1rem;
-            margin-bottom: 1rem;
-        }
-    </style>
+    <title>SpiderLAN Wireless</title>
 </head>
 <body>
-    <div class="container">
-        <h1>SPIDERLAN HOTSPOT</h1>
-        <form id="loginForm">
-            <input type="text" name="username" placeholder="Username" required>
-            <input type="password" name="password" placeholder="Password" required>
-            <button type="submit">Login</button>
-        </form>
-        <div id="plans" class="plans" style="display: none;">
-            <h2>Available Plans</h2>
-            <!-- Plans will be dynamically inserted here -->
-        </div>
-    </div>
-
+    <form name="redirect" action="http://localhost:3000/api/auth/hotspot-login" method="post">
+        <input type="hidden" name="mac" value="$(mac)">
+        <input type="hidden" name="ip" value="$(ip)">
+        <input type="hidden" name="username" value="$(username)">
+        <input type="hidden" name="link-login" value="$(link-login)">
+        <input type="hidden" name="link-orig" value="$(link-orig)">
+    </form>
     <script>
-        const loginForm = document.getElementById('loginForm');
-        const plansContainer = document.getElementById('plans');
-
-        loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(loginForm);
-            const username = formData.get('username');
-            const password = formData.get('password');
-
-            try {
-                const response = await fetch('http://10.5.50.1/auth', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ username, password }),
-                });
-
-                if (response.ok) {
-                    loginForm.style.display = 'none';
-                    plansContainer.style.display = 'block';
-                    fetchPlans();
-                } else {
-                    alert('Login failed. Please try again.');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('An error occurred. Please try again.');
-            }
-        });
-
-        async function fetchPlans() {
-            try {
-                const response = await fetch('http://10.5.50.1/plans');
-                const plans = await response.json();
-
-                plansContainer.innerHTML = '<h2>Available Plans</h2>';
-                plans.forEach(plan => {
-                    const planElement = document.createElement('div');
-                    planElement.classList.add('plan');
-                    planElement.innerHTML = `
-                        <h3>${plan.name}</h3>
-                        <p>Price: $${plan.price}</p>
-                        <p>Duration: ${plan.duration}</p>
-                        <button onclick="selectPlan(${plan.id})">Select</button>
-                    `;
-                    plansContainer.appendChild(planElement);
-                });
-            } catch (error) {
-                console.error('Error fetching plans:', error);
-                plansContainer.innerHTML = '<p>Failed to load plans. Please try again later.</p>';
-            }
-        }
-
-        function selectPlan(planId) {
-            // Implement plan selection logic here
-            console.log('Selected plan:', planId);
-            // You may want to send a request to your server to associate the selected plan with the user
-        }
+        document.redirect.submit();
     </script>
 </body>
 </html>

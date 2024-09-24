@@ -104,11 +104,11 @@ export const getAllUsers = async () => {
 }
 
 export const getUsersByBuilding = async (buildingId: string) => {
-    return prisma.user.findMany({
-        where: {
-            buildingId
-        }
-    });
+    // return prisma.user.findMany({
+    //     where: {
+    //         buildingId
+    //     }
+    // });
 }
 
 export const toggleUserRole = async (userId: string) => {
@@ -132,8 +132,8 @@ export const toggleUserRole = async (userId: string) => {
     });
 
     const message = updatedUser.isAdmin
-        ? `${updatedUser.name || 'User'} is now an admin`
-        : `${updatedUser.name || 'User'}'s admin privileges revoked`;
+        ? `${updatedUser.username || 'User'} is now an admin`
+        : `${updatedUser.username || 'User'}'s admin privileges revoked`;
 
     return { message, updatedUser };
 };

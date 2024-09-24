@@ -29,13 +29,13 @@ export class PaymentService {
 
       // Initiate payment using IntaSend SDK
       const response = await this.intasend.collection().mpesaStkPush({
-        first_name: user.name ? user.name.split(' ')[0] : '',
-        last_name: user.name ? user.name.split(' ')[1] || '' : '',
+        first_name: user.username ? user.username.split(' ')[0] : '',
+        last_name: user.username ? user.username.split(' ')[1] || '' : '',
         email: user.email,
         host: 'https://yourwebsite.com',
         amount,
         phone_number: phoneNumber,
-        api_ref: `subscription_${plan.name}_for ${user.name}`,
+        api_ref: `subscription_${plan.name}_for ${user.username}`,
       });
 
       // Save payment initiation data

@@ -34,9 +34,9 @@ export default class SubscriptionService {
     try {
       const user = await prisma.user.findUnique({
         where: { id: userId },
-        include: { building: { include: { routers: true } } },
+        // include: { building: { include: { routers: true } } },
       });
-      if (!user || !user.building.routers[0]) throw new Error('User or router not found');
+      // if (!user || !user.building.routers[0]) throw new Error('User or router not found');
 
       const plan = await prisma.plan.findUnique({ where: { id: planId } });
       if (!plan) throw new Error('Plan not found');
@@ -54,19 +54,19 @@ export default class SubscriptionService {
         },
       });
 
-      try {
-        await this.performRouterOperation(user.building.routers[0], async (routerManager) => {
-          const assignedIP = await routerManager.assignIPAddress(userId);
-          console.log(`Assigned IP ${assignedIP} to user ${userId}`);
-          await routerManager.enableAccess(userId);
-          console.log(`Enabled access for user ${userId}`);
-        });
-      } catch (error) {
-        console.error('Failed to configure router for new subscription:', error);
-        // Rollback subscription creation
-        await prisma.subscription.delete({ where: { id: subscription.id } });
-        throw new Error('Failed to configure router for new subscription');
-      }
+      // try {
+      //   await this.performRouterOperation(user.building.routers[0], async (routerManager) => {
+      //     const assignedIP = await routerManager.assignIPAddress(userId);
+      //     console.log(`Assigned IP ${assignedIP} to user ${userId}`);
+      //     await routerManager.enableAccess(userId);
+      //     console.log(`Enabled access for user ${userId}`);
+      //   });
+      // } catch (error) {
+      //   console.error('Failed to configure router for new subscription:', error);
+      //   // Rollback subscription creation
+      //   await prisma.subscription.delete({ where: { id: subscription.id } });
+      //   throw new Error('Failed to configure router for new subscription');
+      // }
 
       return subscription;
     } catch (error) {
@@ -75,129 +75,129 @@ export default class SubscriptionService {
     }
   }
 
-  async checkAndDisableExpiredSubscriptions(): Promise<void> {
-    try {
-      const expiredSubscriptions = await prisma.subscription.findMany({
-        where: {
-          endDate: { lte: new Date() },
-          isActive: true,
-        },
-        include: {
-          user: {
-            include: { building: { include: { routers: true } } },
-          },
-        },
-      });
+  // async checkAndDisableExpiredSubscriptions(): Promise<void> {
+  //   try {
+  //     const expiredSubscriptions = await prisma.subscription.findMany({
+  //       where: {
+  //         endDate: { lte: new Date() },
+  //         isActive: true,
+  //       },
+  //       include: {
+  //         user: {
+  //           // include: { building: { include: { routers: true } } },
+  //         },
+  //       },
+  //     });
 
-      // Group subscriptions by router
-      const subscriptionsByRouter = expiredSubscriptions.reduce((acc, subscription) => {
-        const router = subscription.user.building.routers[0];
-        if (router) {
-          if (!acc[router.id]) acc[router.id] = { router, subscriptions: [] };
-          acc[router.id].subscriptions.push(subscription);
-        }
-        return acc;
-      }, {} as Record<string, { router: Router; subscriptions: typeof expiredSubscriptions }>);
+  //     // Group subscriptions by router
+  //     const subscriptionsByRouter = expiredSubscriptions.reduce((acc, subscription) => {
+  //       const router = subscription.user.building.routers[0];
+  //       if (router) {
+  //         if (!acc[router.id]) acc[router.id] = { router, subscriptions: [] };
+  //         acc[router.id].subscriptions.push(subscription);
+  //       }
+  //       return acc;
+  //     }, {} as Record<string, { router: Router; subscriptions: typeof expiredSubscriptions }>);
 
-      for (const { router, subscriptions } of Object.values(subscriptionsByRouter)) {
-        await this.performRouterOperation(router, async (routerManager) => {
-          for (const subscription of subscriptions) {
-            try {
-              await routerManager.disableAccess(subscription.user.id);
-              console.log(`Disabled access for user ${subscription.user.id}`);
+  //     for (const { router, subscriptions } of Object.values(subscriptionsByRouter)) {
+  //       await this.performRouterOperation(router, async (routerManager) => {
+  //         for (const subscription of subscriptions) {
+  //           try {
+  //             await routerManager.disableAccess(subscription.user.id);
+  //             console.log(`Disabled access for user ${subscription.user.id}`);
               
-              await prisma.subscription.update({
-                where: { id: subscription.id },
-                data: { isActive: false },
-              });
-              console.log(`Marked subscription ${subscription.id} as inactive`);
-            } catch (error) {
-              console.error(`Failed to disable access for user ${subscription.user.id}:`, error);
-              // Continue processing other subscriptions
-            }
-          }
-        });
-      }
+  //             await prisma.subscription.update({
+  //               where: { id: subscription.id },
+  //               data: { isActive: false },
+  //             });
+  //             console.log(`Marked subscription ${subscription.id} as inactive`);
+  //           } catch (error) {
+  //             console.error(`Failed to disable access for user ${subscription.user.id}:`, error);
+  //             // Continue processing other subscriptions
+  //           }
+  //         }
+  //       });
+  //     }
 
-      console.log('Expired subscriptions have been processed');
-    } catch (error) {
-      console.error('Failed to process expired subscriptions:', error);
-      throw error;
-    }
-  }
+  //     console.log('Expired subscriptions have been processed');
+  //   } catch (error) {
+  //     console.error('Failed to process expired subscriptions:', error);
+  //     throw error;
+  //   }
+  // }
 
-  async updateBandwidthUsage(subscriptionId: string, usage: number): Promise<void> {
-    try {
-      const subscription = await prisma.subscription.findUnique({
-        where: { id: subscriptionId },
-        include: {
-          plan: true,
-          user: {
-            include: { building: { include: { routers: true } } },
-          },
-        },
-      });
+  // async updateBandwidthUsage(subscriptionId: string, usage: number): Promise<void> {
+  //   try {
+  //     const subscription = await prisma.subscription.findUnique({
+  //       where: { id: subscriptionId },
+  //       include: {
+  //         plan: true,
+  //         user: {
+  //           include: { building: { include: { routers: true } } },
+  //         },
+  //       },
+  //     });
 
-      if (!subscription || !subscription.user.building.routers[0]) throw new Error('Subscription or router not found');
+  //     if (!subscription || !subscription.user.building.routers[0]) throw new Error('Subscription or router not found');
 
-      const updatedBandwidth = subscription.plan.bandwidth - usage;
+  //     const updatedBandwidth = subscription.plan.bandwidth - usage;
 
-      if (updatedBandwidth <= 0) {
-        await this.performRouterOperation(subscription.user.building.routers[0], async (routerManager) => {
-          await routerManager.disableAccess(subscription.user.id);
-          console.log(`Disabled access for user ${subscription.user.id} due to bandwidth overuse`);
-        });
+  //     if (updatedBandwidth <= 0) {
+  //       await this.performRouterOperation(subscription.user.building.routers[0], async (routerManager) => {
+  //         await routerManager.disableAccess(subscription.user.id);
+  //         console.log(`Disabled access for user ${subscription.user.id} due to bandwidth overuse`);
+  //       });
 
-        await prisma.subscription.update({
-          where: { id: subscriptionId },
-          data: { isActive: false },
-        });
+  //       await prisma.subscription.update({
+  //         where: { id: subscriptionId },
+  //         data: { isActive: false },
+  //       });
 
-        console.log(`Subscription ${subscriptionId} expired due to bandwidth overuse`);
-      } else {
-        console.log(`Updated bandwidth usage for subscription ${subscriptionId}, remaining bandwidth: ${updatedBandwidth}`);
-      }
-    } catch (error) {
-      console.error('Failed to update bandwidth usage:', error);
-      throw error;
-    }
-  }
+  //       console.log(`Subscription ${subscriptionId} expired due to bandwidth overuse`);
+  //     } else {
+  //       console.log(`Updated bandwidth usage for subscription ${subscriptionId}, remaining bandwidth: ${updatedBandwidth}`);
+  //     }
+  //   } catch (error) {
+  //     console.error('Failed to update bandwidth usage:', error);
+  //     throw error;
+  //   }
+  // }
 
-  async renewSubscription(subscriptionId: string): Promise<Subscription> {
-    try {
-      const subscription = await prisma.subscription.findUnique({
-        where: { id: subscriptionId },
-        include: {
-          plan: true,
-          user: {
-            include: { building: { include: { routers: true } } },
-          },
-        },
-      });
+  // async renewSubscription(subscriptionId: string): Promise<Subscription> {
+  //   try {
+  //     const subscription = await prisma.subscription.findUnique({
+  //       where: { id: subscriptionId },
+  //       include: {
+  //         plan: true,
+  //         user: {
+  //           include: { building: { include: { routers: true } } },
+  //         },
+  //       },
+  //     });
 
-      if (!subscription || !subscription.user.building.routers[0]) throw new Error('Subscription or router not found');
+  //     if (!subscription || !subscription.user.building.routers[0]) throw new Error('Subscription or router not found');
 
-      const now = new Date();
-      const newEndDate = new Date(now.getTime() + subscription.plan.duration * 1000);
+  //     const now = new Date();
+  //     const newEndDate = new Date(now.getTime() + subscription.plan.duration * 1000);
 
-      const renewedSubscription = await prisma.subscription.update({
-        where: { id: subscriptionId },
-        data: {
-          startDate: now,
-          endDate: newEndDate,
-          isActive: true,
-        },
-      });
+  //     const renewedSubscription = await prisma.subscription.update({
+  //       where: { id: subscriptionId },
+  //       data: {
+  //         startDate: now,
+  //         endDate: newEndDate,
+  //         isActive: true,
+  //       },
+  //     });
 
-      await this.performRouterOperation(subscription.user.building.routers[0], async (routerManager) => {
-        await routerManager.enableAccess(subscription.user.id);
-        console.log(`Re-enabled access for user ${subscription.user.id} after subscription renewal`);
-      });
+  //     await this.performRouterOperation(subscription.user.building.routers[0], async (routerManager) => {
+  //       await routerManager.enableAccess(subscription.user.id);
+  //       console.log(`Re-enabled access for user ${subscription.user.id} after subscription renewal`);
+  //     });
 
-      return renewedSubscription;
-    } catch (error) {
-      console.error('Failed to renew subscription:', error);
-      throw error;
-    }
-  }
+  //     return renewedSubscription;
+  //   } catch (error) {
+  //     console.error('Failed to renew subscription:', error);
+  //     throw error;
+  //   }
+  // }
 }

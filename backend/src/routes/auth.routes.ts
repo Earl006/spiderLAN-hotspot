@@ -9,6 +9,7 @@ const authController = new AuthController();
 
 router.post('/register', authController.registerUser);
 router.post('/login', authController.loginUser);
+router.post('/hotspot-login', authController.hotspotLogin);
 router.put('/change-password',isAuthenticated, authController.changePassword);
 router.get('/user/:userId',isAuthenticated, authController.getUserById);
 

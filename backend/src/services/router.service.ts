@@ -22,7 +22,7 @@ class RouterService {
   async addRouter(
     buildingId: string,
     name: string,
-    ip: string = '192.168.88.1',
+    ip: string = '192.168.56.33',
     username: string,
     password: string
   ) {
@@ -42,9 +42,6 @@ class RouterService {
           await this.routerManager.uploadHotspotTemplate(templatePath);
           console.log('Template uploaded successfully');
   
-          // Configure hotspot redirect and set SSID
-          // await this.routerManager.configureHotspotSettings('SPIDERLAN', '/hotspot/login.html');
-          // console.log('Hotspot settings configured');
   
         } catch (setupError) {
           console.error('Error setting up router:', setupError);
