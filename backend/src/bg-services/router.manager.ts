@@ -385,36 +385,20 @@ class RouterManager {
       console.log('Walled garden configured');
   
       // Add wireless interface
-      console.log('Adding wireless interface...');
-      await this.connection.write('/interface/wireless/add', [
-        '=name=wlan1',
-        '=ssid=SPIDERLAN_HOTSPOT',
-        '=mode=ap-bridge',
-        '=disabled=no',
-      ]);
-      console.log('Wireless interface added');
-  
-      // Add wireless interface to bridge
-      console.log('Adding wireless interface to bridge...');
-      await this.connection.write('/interface/bridge/port/add', [
-        '=bridge=bridge1',
-        '=interface=wlan1',
-      ]);
-      console.log('Wireless interface added to bridge')// Add wireless interface
-      console.log('Adding wireless interface...');
-      const wirelessInterfaces = await this.connection.write('/interface/wireless/print');
-      const wlan1Exists = wirelessInterfaces.some(iface => iface.name === 'wlan1');
-      if (!wlan1Exists) {
-        await this.connection.write('/interface/wireless/add', [
-          '=name=wlan1',
-          '=ssid=SPIDERLAN_HOTSPOT',
-          '=mode=ap-bridge',
-          '=disabled=no',
-        ]);
-        console.log('Wireless interface added');
-      } else {
-        console.log('Wireless interface wlan1 already exists, skipping.');
-      }
+console.log('Adding wireless interface...');
+const wirelessInterfaces = await this.connection.write('/interface/wireless/print');
+const wlan1Exists = wirelessInterfaces.some(iface => iface.name === 'wlan1');
+if (!wlan1Exists) {
+  await this.connection.write('/interface/wireless/add', [
+    '=name=wlan1',
+    '=ssid=SPIDERLAN_HOTSPOT',
+    '=mode=ap-bridge',
+    '=disabled=no',
+  ]);
+  console.log('Wireless interface added');
+} else {
+  console.log('Wireless interface wlan1 already exists, skipping.');
+}
       
       // Add wireless interface to bridge
       console.log('Adding wireless interface to bridge...');
