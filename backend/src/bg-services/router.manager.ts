@@ -349,13 +349,13 @@ class RouterManager {
       console.log('Hotspot enabled');
   
       // Check if user profile exists
-      const userProfiles = await this.connection.write('/ip/hotspot/user-profile/print');
+      const userProfiles = await this.connection.write('/ip/hotspot/user/profile/print');
       const defaultProfile = userProfiles.find(profile => profile.name === 'default');
   
       if (defaultProfile) {
         // Update existing user profile
         console.log('Updating existing user profile...');
-        await this.connection.write('/ip/hotspot/user-profile/set', [
+        await this.connection.write('/ip/hotspot/user/profile/set', [
           `=.id=${defaultProfile['.id']}`,
           '=shared-users=2', // Allow 2 shared users per MAC address
           '=session-timeout=1h',
@@ -366,7 +366,7 @@ class RouterManager {
       } else {
         // Create new user profile
         console.log('Creating user profiles...');
-        await this.connection.write('/ip/hotspot/user-profile/add', [
+        await this.connection.write('/ip/hotspot/user/profile/add', [
           '=name=default',
           '=shared-users=2', // Allow 2 shared users per MAC address
           '=session-timeout=1h',
