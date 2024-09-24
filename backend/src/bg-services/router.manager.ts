@@ -467,9 +467,14 @@ if (!wlan1Exists) {
       const fileName = path.basename(templatePath);
   
       // Remove existing file if it exists
-      await this.connection.write('/file/remove', [
-        `=numbers=hotspot/${fileName}`,
-      ]);
+      try {
+        await this.connection.write('/file/remove', [
+          `=numbers=hotspot/${fileName}`,
+        ]);
+        console.log('Existing file removed');
+      } catch (removeError) {
+        console.log('No existing file to remove, proceeding with upload');
+      }
   
       // Create the new file
       await this.connection.write('/file/add', [
@@ -495,7 +500,7 @@ if (!wlan1Exists) {
         console.error('Error details:', error.response.data);
       }
       throw error;
-    }
+    } 
   }
 }
   
