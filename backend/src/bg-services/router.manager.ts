@@ -280,9 +280,9 @@ class RouterManager {
   
       // Add ethernet interfaces to the bridge
       console.log('Adding interfaces to bridge...');
-      const bridgePorts = await this.connection.write('/interface/bridge/port/print');
+      const bridgePort = await this.connection.write('/interface/bridge/port/print');
       for (const ethInterface of ethInterfaces) {
-        const isAlreadyAdded = bridgePorts.some(port => port.interface === ethInterface.name);
+        const isAlreadyAdded = bridgePort.some(port => port.interface === ethInterface.name);
         if (!isAlreadyAdded) {
           await this.connection.write('/interface/bridge/port/add', [
             '=bridge=bridge1',
@@ -400,7 +400,35 @@ class RouterManager {
         '=bridge=bridge1',
         '=interface=wlan1',
       ]);
-      console.log('Wireless interface added to bridge');
+      console.log('Wireless interface added to bridge')// Add wireless interface
+      console.log('Adding wireless interface...');
+      const wirelessInterfaces = await this.connection.write('/interface/wireless/print');
+      const wlan1Exists = wirelessInterfaces.some(iface => iface.name === 'wlan1');
+      if (!wlan1Exists) {
+        await this.connection.write('/interface/wireless/add', [
+          '=name=wlan1',
+          '=ssid=SPIDERLAN_HOTSPOT',
+          '=mode=ap-bridge',
+          '=disabled=no',
+        ]);
+        console.log('Wireless interface added');
+      } else {
+        console.log('Wireless interface wlan1 already exists, skipping.');
+      }
+      
+      // Add wireless interface to bridge
+      console.log('Adding wireless interface to bridge...');
+      const bridgePorts = await this.connection.write('/interface/bridge/port/print');
+      const wlan1OnBridge = bridgePorts.some(port => port.interface === 'wlan1');
+      if (!wlan1OnBridge) {
+        await this.connection.write('/interface/bridge/port/add', [
+          '=bridge=bridge1',
+          '=interface=wlan1',
+        ]);
+        console.log('Wireless interface added to bridge');
+      } else {
+        console.log('Wireless interface wlan1 is already on the bridge, skipping.');
+      };
   
       console.log('Hotspot configurations set up successfully');
     } catch (error: any) {
