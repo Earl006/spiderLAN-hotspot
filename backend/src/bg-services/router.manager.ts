@@ -10,6 +10,7 @@ class RouterManager {
       host,
       user: username,
       password,
+      timeout: 30000,
       keepalive: true,
     });
   }
@@ -251,6 +252,20 @@ class RouterManager {
         throw new Error('Not enough ethernet interfaces available. At least 2 are required.');
       }
   
+      // Find the DHCP client ID for ether1
+      const dhcpClients = await this.connection.write('/ip/dhcp-client/print');
+      const dhcpClient = dhcpClients.find(client => client.interface === ethInterfaces[0].name);
+  
+      if (dhcpClient) {
+        // Disable DHCP client on ether1 if it exists
+        console.log('Disabling DHCP client on ether1...');
+        await this.connection.write('/ip/dhcp-client/disable', [
+          `=.id=${dhcpClient['.id']}`,
+        ]);
+        console.log('DHCP client disabled on ether1');
+      } else {
+        console.log('No DHCP client found for ether1, skipping DHCP client disable step.');
+      }
       // Create a bridge for the hotspot
       console.log('Creating bridge...');
       await this.connection.write('/interface/bridge/add', [
@@ -260,30 +275,39 @@ class RouterManager {
       // Verify bridge creation
       const bridges = await this.connection.write('/interface/bridge/print');
       console.log('Bridges after creation:', bridges);
+      const logs = await this.connection.write('/log/print');
+      console.log('System logs (After Bridge creation):', logs);
   
       // Add ethernet interfaces to the bridge
       console.log('Adding interfaces to bridge...');
-      for (let i = 0; i < 2; i++) {
-        await this.connection.write('/interface/bridge/port/add', [
-          '=bridge=bridge1',
-          `=interface=${ethInterfaces[i].name}`,
-        ]);
-        console.log(`Added ${ethInterfaces[i].name} to bridge1`);
+      const bridgePorts = await this.connection.write('/interface/bridge/port/print');
+      for (const ethInterface of ethInterfaces) {
+        const isAlreadyAdded = bridgePorts.some(port => port.interface === ethInterface.name);
+        if (!isAlreadyAdded) {
+          await this.connection.write('/interface/bridge/port/add', [
+            '=bridge=bridge1',
+            `=interface=${ethInterface.name}`,
+          ]);
+          console.log(`Added ${ethInterface.name} to bridge1`);
+        } else {
+          console.log(`${ethInterface.name} is already added to bridge1, skipping.`);
+        }
       }
-  
       // Set up IP address for the hotspot
       console.log('Setting up IP address for hotspot...');
       await this.connection.write('/ip/address/add', [
-        '=address=10.5.50.1/24',
+        '=address=10.10.10.1/24', // Use a different IP address range
         '=interface=bridge1',
       ]);
-  
+      console.log('IP address set up for hotspot');
+      
       // Create IP pool for hotspot clients
       console.log('Creating IP pool for hotspot clients...');
       await this.connection.write('/ip/pool/add', [
         '=name=hs-pool-1',
-        '=ranges=10.5.50.2-10.5.50.254',
+        '=ranges=10.10.10.2-10.10.10.254',
       ]);
+      console.log('IP pool created for hotspot clients');
   
       // Set up DHCP server
       console.log('Setting up DHCP server...');
@@ -293,16 +317,18 @@ class RouterManager {
         '=address-pool=hs-pool-1',
         '=lease-time=1h',
       ]);
+      console.log('DHCP server set up');
   
       // Create hotspot profile
       console.log('Creating hotspot profile...');
       await this.connection.write('/ip/hotspot/profile/add', [
         '=name=hsprof1',
-        '=hotspot-address=10.5.50.1',
+        '=hotspot-address=10.10.10.1',
         '=dns-name=hotspot.spiderlan.net',
         '=html-directory=hotspot',
-        '=login-by=cookie,http-chap,http-pap,mac-cookie',
+        '=login-by=http-pap', // Allow only HTTP PAP
       ]);
+      console.log('Hotspot profile created');
   
       // Enable hotspot on the bridge interface
       console.log('Enabling hotspot on bridge interface...');
@@ -313,6 +339,68 @@ class RouterManager {
         '=profile=hsprof1',
         '=addresses-per-mac=2',
       ]);
+      console.log('Hotspot enabled on bridge interface');
+  
+      // Enable the hotspot
+      console.log('Enabling the hotspot...');
+      await this.connection.write('/ip/hotspot/enable', [
+        `=.id=*1`, // Use the correct ID for the hotspot
+      ]);
+      console.log('Hotspot enabled');
+  
+      // Check if user profile exists
+      const userProfiles = await this.connection.write('/ip/hotspot/user-profile/print');
+      const defaultProfile = userProfiles.find(profile => profile.name === 'default');
+  
+      if (defaultProfile) {
+        // Update existing user profile
+        console.log('Updating existing user profile...');
+        await this.connection.write('/ip/hotspot/user-profile/set', [
+          `=.id=${defaultProfile['.id']}`,
+          '=shared-users=2', // Allow 2 shared users per MAC address
+          '=session-timeout=1h',
+          '=idle-timeout=10m',
+          '=keepalive-timeout=2m',
+        ]);
+        console.log('User profile updated');
+      } else {
+        // Create new user profile
+        console.log('Creating user profiles...');
+        await this.connection.write('/ip/hotspot/user-profile/add', [
+          '=name=default',
+          '=shared-users=2', // Allow 2 shared users per MAC address
+          '=session-timeout=1h',
+          '=idle-timeout=10m',
+          '=keepalive-timeout=2m',
+        ]);
+        console.log('User profiles created');
+      }
+  
+      // Configure walled garden
+      console.log('Configuring walled garden...');
+      await this.connection.write('/ip/hotspot/walled-garden/ip/add', [
+        '=dst-host=https://github.com/Earl006/spiderLAN', // Replace with the actual link
+        '=action=accept',
+      ]);
+      console.log('Walled garden configured');
+  
+      // Add wireless interface
+      console.log('Adding wireless interface...');
+      await this.connection.write('/interface/wireless/add', [
+        '=name=wlan1',
+        '=ssid=SPIDERLAN_HOTSPOT',
+        '=mode=ap-bridge',
+        '=disabled=no',
+      ]);
+      console.log('Wireless interface added');
+  
+      // Add wireless interface to bridge
+      console.log('Adding wireless interface to bridge...');
+      await this.connection.write('/interface/bridge/port/add', [
+        '=bridge=bridge1',
+        '=interface=wlan1',
+      ]);
+      console.log('Wireless interface added to bridge');
   
       console.log('Hotspot configurations set up successfully');
     } catch (error: any) {

@@ -7,10 +7,10 @@ Content-Type: application/json
 Authorization: Bearer {{authToken}}
 
 {
-  "buildingId": "20cce841-06ee-4819-aeea-16c9f3e40d63",
+  "buildingId": "9358e1b6-5bcb-4b92-a4db-399f2cb22049",
   "name": "Router 1",
   "username": "admin",
-  "password": "eaw111hh"
+  "password": "password"
 }
 
 ### Update a router
@@ -22,7 +22,7 @@ Content-Type: application/json
 }
 
 ### Delete a router
-DELETE {{baseUrl}}/20cce841-06ee-4819-aeea-16c9f3e40d63
+DELETE {{baseUrl}}/7310a194-3c51-4102-a938-fbb27a21dc42
 
 ### Get all routers
 GET {{baseUrl}}

@@ -6,7 +6,7 @@ const router = express.Router();
 
 const buildingController = new BuildingController();
 
-router.post('/add', isAuthenticated, isAdmin, buildingController.createBuilding);
+router.post('/add', buildingController.createBuilding);
 router.get('/', buildingController.getAllBuildings);
 router.get('/:buildingId', isAuthenticated, buildingController.getBuildingById);
 router.put('/:buildingId', isAuthenticated, isAdmin, buildingController.updateBuilding);

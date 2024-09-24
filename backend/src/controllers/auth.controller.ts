@@ -31,6 +31,18 @@ export class AuthController {
             console.log('Login failed!!');
         }
     }
+   
+    hotspotLogin = async (req: any, res: any) => {
+        const { username, password, mac, ip } = req.body;
+        try {
+            const { token, user } = await this.authService.hotspotLogin(username, password, mac, ip);
+            res.status(200).json({ message:'Login successfull!!',token });
+            console.log('Login succesfull!!');
+        } catch (error: any) {
+            res.status(400).json({ message: error.message });
+            console.log('Login failed!!');
+        }
+    }
     changePassword = async (req: any, res: any) => {
         try {
             await this.authService.changePassword(req.body, req.body.userId);

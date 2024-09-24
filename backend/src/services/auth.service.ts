@@ -68,7 +68,39 @@ export default class AuthService {
 
         return { user, token };
     }
+   
+    async hotspotLogin(username: string, password: string, mac: string, ip: string) {
+        try {
+            const user = await prisma.user.findUnique({ where: { email: username } });
+            if (!user) {
+                throw new Error('User not found');
+            }
 
+            const isPasswordValid = await bcrypt.compare(password, user.password);
+            if (!isPasswordValid) {
+                throw new Error('Invalid password');
+            }
+
+            // Update user's IP and MAC address
+            await prisma.user.update({
+                where: { id: user.id },
+                data: {
+                    macAddress: mac,
+                    ipAddress: ip,
+                },
+            });
+
+            // Generate token
+            const token = generateToken({ userId: user.id });
+
+            return { token, user };
+        } catch (error) {
+            console.error('Failed to login:', error);
+            throw error;
+        }
+    }
+   
+    
     async changePassword(data: { oldPassword: string; newPassword: string }, userId: string) {
         // Find user by ID
         const user = await prisma.user.findUnique({
