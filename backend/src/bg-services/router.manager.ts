@@ -394,10 +394,13 @@ class RouterManager {
   
       if (wlan1) {
         // Check if CAPsMAN is managing the wireless interface
-        if (wlan1['caps-man'] === 'yes') {
+        const capsmanInterfaces = await this.connection.write('/interface/wireless/cap/print');
+        const capsmanWlan1 = capsmanInterfaces.find(iface => iface.interface === 'wlan1');
+  
+        if (capsmanWlan1) {
           console.log('Disabling CAPsMAN management for wlan1...');
-          await this.connection.write('/interface/wireless/caps-man/managed-config/remove', [
-            `=.id=${wlan1['.id']}`,
+          await this.connection.write('/interface/wireless/cap/remove', [
+            `=.id=${capsmanWlan1['.id']}`,
           ]);
           console.log('CAPsMAN management disabled for wlan1');
         }
