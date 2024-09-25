@@ -476,16 +476,10 @@ if (!wlan1Exists) {
         console.log('No existing file to remove, proceeding with upload');
       }
 
-      // Create an empty file
-      await this.connection.write('/file/set', [
-        `=name=hotspot/${fileName}`,
-        `=contents=`, // Create an empty file
-      ]);
-
-      // Update the file with the new content
-      await this.connection.write('/file/set', [
-        `=name=hotspot/${fileName}`,
-        `=contents=${content}`,
+      // Use /tool/fetch to upload the file content
+      await this.connection.write('/tool/fetch', [
+        `=url=data:text/plain;base64,${Buffer.from(content).toString('base64')}`,
+        `=dst-path=hotspot/${fileName}`,
       ]);
 
       console.log('Hotspot template uploaded successfully');
