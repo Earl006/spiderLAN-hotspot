@@ -267,6 +267,7 @@ class RouterManager {
       } else {
         console.log('No DHCP client found for ether1, skipping DHCP client disable step.');
       }
+  
       // Create a bridge for the hotspot
       console.log('Creating bridge...');
       await this.connection.write('/interface/bridge/add', [
@@ -294,6 +295,7 @@ class RouterManager {
           console.log(`${ethInterface.name} is already added to bridge1, skipping.`);
         }
       }
+  
       // Set up IP address for the hotspot
       console.log('Setting up IP address for hotspot...');
       await this.connection.write('/ip/address/add', [
@@ -386,34 +388,46 @@ class RouterManager {
       console.log('Walled garden configured');
   
       // Add wireless interface
-console.log('Adding wireless interface...');
-const wirelessInterfaces = await this.connection.write('/interface/wireless/print');
-const wlan1Exists = wirelessInterfaces.some(iface => iface.name === 'wlan1');
-if (!wlan1Exists) {
-  await this.connection.write('/interface/wireless/add', [
-    '=name=wlan1',
-    '=ssid=SPIDERLAN_HOTSPOT',
-    '=mode=ap-bridge',
-    '=disabled=no',
-  ]);
-  console.log('Wireless interface added successfully');
-} else {
-  console.log('Wireless interface wlan1 already exists, skipping.');
-}
-      
-      // Add wireless interface to bridge
-      console.log('Adding wireless interface to bridge...');
-      const bridgePorts = await this.connection.write('/interface/bridge/port/print');
-      const wlan1OnBridge = bridgePorts.some(port => port.interface === 'wlan1');
-      if (!wlan1OnBridge) {
-        await this.connection.write('/interface/bridge/port/add', [
-          '=bridge=bridge1',
-          '=interface=wlan1',
+      console.log('Adding wireless interface...');
+      const wirelessInterfaces = await this.connection.write('/interface/wireless/print');
+      const wlan1 = wirelessInterfaces.find(iface => iface.name === 'wlan1');
+  
+      if (wlan1) {
+        // Check if CAPsMAN is managing the wireless interface
+        if (wlan1['caps-man'] === 'yes') {
+          console.log('Disabling CAPsMAN management for wlan1...');
+          await this.connection.write('/interface/wireless/caps-man/managed-config/remove', [
+            `=.id=${wlan1['.id']}`,
+          ]);
+          console.log('CAPsMAN management disabled for wlan1');
+        }
+  
+        // Configure the wireless interface
+        console.log('Configuring wireless interface...');
+        await this.connection.write('/interface/wireless/set', [
+          `=.id=${wlan1['.id']}`,
+          '=ssid=SPIDERLAN_HOTSPOT',
+          '=mode=ap-bridge',
+          '=disabled=no',
         ]);
-        console.log('Wireless interface added to bridge');
+        console.log('Wireless interface configured');
+  
+        // Add wireless interface to bridge
+        console.log('Adding wireless interface to bridge...');
+        const bridgePorts = await this.connection.write('/interface/bridge/port/print');
+        const wlan1OnBridge = bridgePorts.some(port => port.interface === 'wlan1');
+        if (!wlan1OnBridge) {
+          await this.connection.write('/interface/bridge/port/add', [
+            '=bridge=bridge1',
+            '=interface=wlan1',
+          ]);
+          console.log('Wireless interface added to bridge');
+        } else {
+          console.log('Wireless interface wlan1 is already on the bridge, skipping.');
+        }
       } else {
-        console.log('Wireless interface wlan1 is already on the bridge, skipping.');
-      };
+        console.log('Wireless interface wlan1 not found, skipping wireless configuration.');
+      }
   
       console.log('Hotspot configurations set up successfully');
     } catch (error: any) {
@@ -424,7 +438,6 @@ if (!wlan1Exists) {
       throw error;
     }
   }
-
   async configureHotspotSettings(ssid: string, loginPage: string): Promise<void> {
     try {
       console.log('Configuring hotspot settings...');
