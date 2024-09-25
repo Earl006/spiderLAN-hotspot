@@ -297,7 +297,7 @@ class RouterManager {
       // Set up IP address for the hotspot
       console.log('Setting up IP address for hotspot...');
       await this.connection.write('/ip/address/add', [
-        '=address=10.10.10.1/24', // Use a different IP address range
+        '=address=192.168.100.1/24',
         '=interface=bridge1',
       ]);
       console.log('IP address set up for hotspot');
@@ -306,7 +306,7 @@ class RouterManager {
       console.log('Creating IP pool for hotspot clients...');
       await this.connection.write('/ip/pool/add', [
         '=name=hs-pool-1',
-        '=ranges=10.10.10.2-10.10.10.254',
+        '=ranges=192.168.100.2-192.168.100.254',
       ]);
       console.log('IP pool created for hotspot clients');
   
@@ -324,7 +324,7 @@ class RouterManager {
       console.log('Creating hotspot profile...');
       await this.connection.write('/ip/hotspot/profile/add', [
         '=name=hsprof1',
-        '=hotspot-address=10.10.10.1',
+        '=hotspot-address=192.168.100.1',
         '=dns-name=hotspot.spiderlan.net',
         '=html-directory=hotspot',
         '=login-by=http-pap', // Allow only HTTP PAP
