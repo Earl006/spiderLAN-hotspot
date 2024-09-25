@@ -1,6 +1,7 @@
 import { RouterOSAPI } from 'node-routeros';
 import * as fs from 'fs';
 import * as path from 'path';
+import FTPClient from 'ftp';
 
 class RouterManager {
   public connection: RouterOSAPI;
@@ -476,13 +477,21 @@ if (!wlan1Exists) {
         console.log('No existing file to remove, proceeding with upload');
       }
 
-      // Use /tool/fetch to upload the file content
-      await this.connection.write('/tool/fetch', [
-        `=url=data:text/plain;base64,${Buffer.from(content).toString('base64')}`,
-        `=dst-path=hotspot/${fileName}`,
-      ]);
+      // Use FTP to upload the file content
+      const ftpClient = new FTPClient();
+      ftpClient.on('ready', () => {
+        ftpClient.put(templatePath, `hotspot/${fileName}`, (err) => {
+          if (err) throw err;
+          ftpClient.end();
+          console.log('Hotspot template uploaded successfully');
+        });
+      });
 
-      console.log('Hotspot template uploaded successfully');
+      ftpClient.connect({
+        host: this.connection.host,
+        user: this.connection.user,
+        password: this.connection.password,
+      });
 
       // Verify the file was created
       const files = await this.connection.write('/file/print', [
