@@ -395,7 +395,7 @@ if (!wlan1Exists) {
     '=mode=ap-bridge',
     '=disabled=no',
   ]);
-  console.log('Wireless interface added');
+  console.log('Wireless interface added successfully');
 } else {
   console.log('Wireless interface wlan1 already exists, skipping.');
 }
