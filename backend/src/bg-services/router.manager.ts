@@ -465,7 +465,7 @@ if (!wlan1Exists) {
       console.log('Uploading hotspot template...');
       const content = await fs.promises.readFile(templatePath, 'utf8');
       const fileName = path.basename(templatePath);
-  
+
       // Remove existing file if it exists
       try {
         await this.connection.write('/file/remove', [
@@ -475,30 +475,30 @@ if (!wlan1Exists) {
       } catch (removeError) {
         console.log('No existing file to remove, proceeding with upload');
       }
-  
+
       // Create an empty file
       await this.connection.write('/file/set', [
         `=name=hotspot/${fileName}`,
         `=contents=`, // Create an empty file
       ]);
-  
+
       // Update the file with the new content
       await this.connection.write('/file/set', [
         `=name=hotspot/${fileName}`,
         `=contents=${content}`,
       ]);
-  
+
       console.log('Hotspot template uploaded successfully');
-  
+
       // Verify the file was created
       const files = await this.connection.write('/file/print', [
         `?name=hotspot/${fileName}`,
       ]);
-  
+
       if (files.length === 0) {
         throw new Error('File was not created successfully');
       }
-  
+
       console.log('File verified in RouterOS');
     } catch (error: any) {
       console.error('Failed to upload hotspot template:', error);
