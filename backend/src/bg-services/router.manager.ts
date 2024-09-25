@@ -464,7 +464,6 @@ if (!wlan1Exists) {
   async uploadHotspotTemplate(templatePath: string): Promise<void> {
     try {
       console.log('Uploading hotspot template...');
-      const content = await fs.promises.readFile(templatePath, 'utf8');
       const fileName = path.basename(templatePath);
 
       // Remove existing file if it exists
@@ -492,6 +491,9 @@ if (!wlan1Exists) {
         user: this.connection.user,
         password: this.connection.password,
       });
+
+      // Add a delay before verifying the file
+      await new Promise(resolve => setTimeout(resolve, 5000));
 
       // Verify the file was created
       const files = await this.connection.write('/file/print', [
