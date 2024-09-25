@@ -476,8 +476,14 @@ if (!wlan1Exists) {
         console.log('No existing file to remove, proceeding with upload');
       }
   
-      // Create the new file
-      await this.connection.write('/file/add', [
+      // Create an empty file
+      await this.connection.write('/file/set', [
+        `=name=hotspot/${fileName}`,
+        `=contents=`, // Create an empty file
+      ]);
+  
+      // Update the file with the new content
+      await this.connection.write('/file/set', [
         `=name=hotspot/${fileName}`,
         `=contents=${content}`,
       ]);
@@ -500,7 +506,7 @@ if (!wlan1Exists) {
         console.error('Error details:', error.response.data);
       }
       throw error;
-    } 
+    }
   }
 }
   
