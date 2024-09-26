@@ -393,8 +393,6 @@ class RouterManager {
         '=enabled=no',
       ]);
       
-      
-  
       // Add wireless interface
       console.log('Adding wireless interface...');
       const wirelessInterfaces = await this.connection.write('/interface/wireless/print');
