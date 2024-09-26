@@ -372,7 +372,7 @@ class RouterManager {
             console.log('Creating user profiles...');
             await this.connection.write('/ip/hotspot/user/profile/add', [
                 '=name=default',
-                '=shared-users=2', // Allow 2 shared users per MAC address
+                '=shared-users=20', // Allow 2 shared users per MAC address
                 '=session-timeout=1h',
                 '=idle-timeout=10m',
                 '=keepalive-timeout=2m',
