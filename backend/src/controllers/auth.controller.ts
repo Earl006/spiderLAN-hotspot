@@ -32,6 +32,8 @@ export class AuthController {
    
     hotspotLogin = async (req: any, res: any) => {
         const { username, password, mac, ip } = req.body;
+        console.log(`Captured IP: ${ip}`);
+            console.log(`Captured MAC: ${mac}`);
         try {
             const { token, user } = await this.authService.hotspotLogin(username, password, mac, ip);
             res.status(200).json({ message:'Login successfull!!',token });
