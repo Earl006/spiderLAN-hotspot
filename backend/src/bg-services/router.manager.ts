@@ -452,6 +452,21 @@ class RouterManager {
             '=out-interface=ether1', // Adjust this to your WAN interface
         ]);
         console.log('NAT rule added for hotspot');
+        // Add firewall rules to allow DHCP traffic
+console.log('Adding firewall rules to allow DHCP traffic...');
+await this.connection.write('/ip/firewall/filter/add', [
+    '=chain=input',
+    '=protocol=udp',
+    '=dst-port=67-68',
+    '=action=accept',
+]);
+await this.connection.write('/ip/firewall/filter/add', [
+    '=chain=forward',
+    '=protocol=udp',
+    '=dst-port=67-68',
+    '=action=accept',
+]);
+console.log('Firewall rules added to allow DHCP traffic');
 
         // Add firewall rules to allow traffic from hotspot to internet
         console.log('Adding firewall rules to allow traffic from hotspot to internet...');
