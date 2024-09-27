@@ -252,13 +252,19 @@ class RouterManager {
       if (ethInterfaces.length < 2) {
         throw new Error('Not enough ethernet interfaces available. At least 2 are required.');
       }
-            // Remove ether1 from any bridge or switch configuration
-      console.log('Removing ether1 from any bridge or switch configuration...');
-      await this.connection.write('/interface/ethernet/set', [
-          '=name=ether1',
-          '=master-port=none',
-      ]);
-      console.log('ether1 is no longer a slave interface.');
+     // Remove ether1 from any bridge or switch configuration
+console.log('Removing ether1 from any bridge or switch configuration...');
+const bridgePorts = await this.connection.write('/interface/bridge/port/print');
+const ether1Port = bridgePorts.find(port => port.interface === 'ether1');
+
+if (ether1Port) {
+    await this.connection.write('/interface/bridge/port/remove', [
+        `=.id=${ether1Port['.id']}`,
+    ]);
+    console.log('ether1 is no longer a slave interface.');
+} else {
+    console.log('ether1 is not part of any bridge or switch configuration.');
+}
   
       // Configure ether1 as WAN interface
       console.log('Configuring ether1 as WAN interface...');
