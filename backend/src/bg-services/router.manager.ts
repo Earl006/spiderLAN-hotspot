@@ -314,12 +314,11 @@ class RouterManager {
 
         // Set up DHCP server
         console.log('Setting up DHCP server...');
-        await this.connection.write('/ip/dhcp/server/add', [
+        await this.connection.write('/ip/dhcp-server/add', [
             '=name=dhcp1',
             '=interface=bridge1',
             '=address-pool=hs-pool-1',
             '=lease-time=1h',
-            '=dns-server=8.8.8.8,8.8.4.4', // Add DNS servers
         ]);
         console.log('DHCP server set up');
 
