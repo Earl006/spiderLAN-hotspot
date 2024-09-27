@@ -319,6 +319,9 @@ class RouterManager {
             '=interface=bridge1',
             '=address-pool=hs-pool-1',
             '=lease-time=1h',
+            '=dns-server=8.8.8.8,8.8.4.4',
+            'disabled=no',
+
         ]);
         console.log('DHCP server set up');
 
