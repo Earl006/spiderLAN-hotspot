@@ -391,6 +391,12 @@ class RouterManager {
          ]);
          console.log('Walled garden configured');
 
+          //Disable CAPsMAN Management on wireless interface
+      console.log('Disabling CAPsMAN management for wlan1...');
+      await this.connection.write('/interface/wireless/cap/set', [
+        '=enabled=no',
+      ]);
+
         // Add wireless interface
         console.log('Adding wireless interface...');
         const wirelessInterfaces = await this.connection.write('/interface/wireless/print');
