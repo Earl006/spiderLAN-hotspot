@@ -323,6 +323,14 @@ class RouterManager {
 
         ]);
         console.log('DHCP server set up');
+         // Set up DHCP network with DNS servers
+        console.log('Setting up DHCP network...');
+        await this.connection.write('/ip/dhcp-server/network/add', [
+            '=address=192.168.100.0/24',
+            '=gateway=192.168.100.1',
+            '=dns-server=8.8.8.8,8.8.4.4', // Add DNS servers here
+        ]);
+        console.log('DHCP network set up');
 
         // Create hotspot profile
         console.log('Creating hotspot profile...');
