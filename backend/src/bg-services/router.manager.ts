@@ -278,6 +278,17 @@ if (ether1Port) {
                 console.log(`${ethInterface} is not part of any bridge configuration.`);
             }
         }
+         // Check and remove existing DHCP client on ether1
+         console.log('Checking for existing DHCP client on ether1...');
+         const dhcpClients = await this.connection.write('/ip/dhcp-client/print');
+         const ether1DhcpClient = dhcpClients.find(client => client.interface === 'ether1');
+ 
+         if (ether1DhcpClient) {
+             await this.connection.write('/ip/dhcp-client/remove', [
+                 `=.id=${ether1DhcpClient['.id']}`,
+             ]);
+             console.log('Removed existing DHCP client on ether1.');
+         }
       // Configure ether1 as WAN interface
       console.log('Configuring ether1 as WAN interface...');
       await this.connection.write('/ip/dhcp-client/add', [
