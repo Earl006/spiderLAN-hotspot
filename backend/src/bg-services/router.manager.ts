@@ -265,13 +265,27 @@ if (ether1Port) {
 } else {
     console.log('ether1 is not part of any bridge or switch configuration.');
 }
-  
+  // Remove interfaces from any existing bridge configuration
+        console.log('Removing interfaces from any existing bridge configuration...');
+        for (const ethInterface of ethInterfaces) {
+            const port = bridgePorts.find(port => port.interface === ethInterface);
+            if (port) {
+                await this.connection.write('/interface/bridge/port/remove', [
+                    `=.id=${port['.id']}`,
+                ]);
+                console.log(`${ethInterface} removed from existing bridge configuration.`);
+            } else {
+                console.log(`${ethInterface} is not part of any bridge configuration.`);
+            }
+        }
       // Configure ether1 as WAN interface
       console.log('Configuring ether1 as WAN interface...');
       await this.connection.write('/ip/dhcp-client/add', [
         '=interface=ether1',
         '=disabled=no',
       ]);
+
+
   
       // Create a bridge for the hotspot
       console.log('Creating bridge...');
