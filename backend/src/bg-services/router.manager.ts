@@ -298,19 +298,19 @@ if (ether1Port) {
         // Add ethernet interfaces (except ether1) to the bridge
         console.log('Adding interfaces to bridge...');
         for (const ethInterface of ethInterfaces) {
-            if (ethInterface.name !== 'ether1') {
-                const existingPort = updatedBridgePorts.find(port => port.interface === ethInterface.name && port.bridge === 'bridge1');
-                if (!existingPort) {
-                    await this.connection.write('/interface/bridge/port/add', [
-                        '=bridge=bridge1',
-                        `=interface=${ethInterface.name}`,
-                    ]);
-                    console.log(`Added ${ethInterface.name} to bridge1`);
-                } else {
-                    console.log(`${ethInterface.name} is already part of bridge1`);
-                }
-            }
-        }
+          if (ethInterface.name !== 'ether1') {
+              const existingPort = updatedBridgePorts.find(port => port.interface === ethInterface.name && port.bridge === 'bridge1');
+              if (!existingPort) {
+                  await this.connection.write('/interface/bridge/port/add', [
+                      '=bridge=bridge1',
+                      `=interface=${ethInterface.name}`,
+                  ]);
+                  console.log(`Added ${ethInterface.name} to bridge1`);
+              } else {
+                  console.log(`${ethInterface.name} is already part of bridge1`);
+              }
+          }
+      }
   
       // Set up IP address for the hotspot
       console.log('Setting up IP address for hotspot...');
