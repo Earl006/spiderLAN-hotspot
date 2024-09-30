@@ -291,12 +291,15 @@ if (ether1Port) {
       await this.connection.write('/interface/bridge/add', [
         '=name=bridge1',
       ]);
+
+       // Refresh bridgePorts after creating the bridge
+       const updatedBridgePorts = await this.connection.write('/interface/bridge/port/print');
   
         // Add ethernet interfaces (except ether1) to the bridge
         console.log('Adding interfaces to bridge...');
         for (const ethInterface of ethInterfaces) {
             if (ethInterface.name !== 'ether1') {
-                const existingPort = bridgePorts.find(port => port.interface === ethInterface.name && port.bridge === 'bridge1');
+                const existingPort = updatedBridgePorts.find(port => port.interface === ethInterface.name && port.bridge === 'bridge1');
                 if (!existingPort) {
                     await this.connection.write('/interface/bridge/port/add', [
                         '=bridge=bridge1',
@@ -308,6 +311,7 @@ if (ether1Port) {
                 }
             }
         }
+
   
       // Set up IP address for the hotspot
       console.log('Setting up IP address for hotspot...');
