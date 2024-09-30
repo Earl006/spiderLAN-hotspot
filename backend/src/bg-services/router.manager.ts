@@ -265,19 +265,6 @@ if (ether1Port) {
 } else {
     console.log('ether1 is not part of any bridge or switch configuration.');
 }
-  // Remove interfaces from any existing bridge configuration
-  console.log('Removing interfaces from any existing bridge configuration...');
-  for (const ethInterface of ethInterfaces) {
-      const port = bridgePorts.find(port => port.interface === ethInterface.name);
-      if (port) {
-          await this.connection.write('/interface/bridge/port/remove', [
-              `=.id=${port['.id']}`,
-          ]);
-          console.log(`${ethInterface.name} removed from existing bridge configuration.`);
-      } else {
-          console.log(`${ethInterface.name} is not part of any bridge configuration.`);
-      }
-  }
 
          // Check and remove existing DHCP client on ether1
          console.log('Checking for existing DHCP client on ether1...');
