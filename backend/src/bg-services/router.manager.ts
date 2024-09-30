@@ -311,7 +311,6 @@ if (ether1Port) {
                 }
             }
         }
-
   
       // Set up IP address for the hotspot
       console.log('Setting up IP address for hotspot...');
