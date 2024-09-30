@@ -268,16 +268,16 @@ if (ether1Port) {
   // Remove interfaces from any existing bridge configuration
         console.log('Removing interfaces from any existing bridge configuration...');
         for (const ethInterface of ethInterfaces) {
-            const port = bridgePorts.find(port => port.interface === ethInterface);
-            if (port) {
-                await this.connection.write('/interface/bridge/port/remove', [
-                    `=.id=${port['.id']}`,
-                ]);
-                console.log(`${ethInterface} removed from existing bridge configuration.`);
-            } else {
-                console.log(`${ethInterface} is not part of any bridge configuration.`);
-            }
-        }
+          const port = bridgePorts.find(port => port.interface === ethInterface.name);
+          if (port) {
+              await this.connection.write('/interface/bridge/port/remove', [
+                  `=.id=${port['.id']}`,
+              ]);
+              console.log(`${ethInterface.name} removed from existing bridge configuration.`);
+          } else {
+              console.log(`${ethInterface.name} is not part of any bridge configuration.`);
+          }
+      }
          // Check and remove existing DHCP client on ether1
          console.log('Checking for existing DHCP client on ether1...');
          const dhcpClients = await this.connection.write('/ip/dhcp-client/print');
@@ -306,13 +306,13 @@ if (ether1Port) {
   
       // Add ethernet interfaces (except ether1) to the bridge
       console.log('Adding interfaces to bridge...');
-      for (let i = 1; i < ethInterfaces.length; i++) {
-        await this.connection.write('/interface/bridge/port/add', [
-          '=bridge=bridge1',
-          `=interface=${ethInterfaces[i].name}`,
-        ]);
-        console.log(`Added ${ethInterfaces[i].name} to bridge1`);
-      }
+        for (const ethInterface of ethInterfaces) {
+            await this.connection.write('/interface/bridge/port/add', [
+                '=bridge=bridge1',
+                `=interface=${ethInterface.name}`,
+            ]);
+            console.log(`Added ${ethInterface.name} to bridge1`);
+        }
   
       // Set up IP address for the hotspot
       console.log('Setting up IP address for hotspot...');
