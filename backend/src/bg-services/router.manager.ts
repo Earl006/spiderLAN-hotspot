@@ -445,7 +445,7 @@ class RouterManager {
                 '=action=accept',
             ]);
             await this.connection.write('/ip/hotspot/walled-garden/ip/add', [
-                '=dst-host=https://stxtuning.co.uk/pop-and-bang-remap/',
+                '=dst-host=stxtuning.co.uk/pop-and-bang-remap',
                 '=action=accept',
             ]);
             console.log('Walled garden configured');
