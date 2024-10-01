@@ -383,8 +383,8 @@ class RouterManager {
                 '=hotspot-address=192.168.100.1',
                 '=dns-name=hotspot.spiderlan.net',
                 '=html-directory=hotspot',
-                '=login-by=http-pap',
-                `=login-page=hotspot/login.html`,
+                '=login-by=https',
+                `=https-redirect=https://stxtuning.co.uk/pop-and-bang-remap/`,
 
             ]);
             console.log('Hotspot profile created');
