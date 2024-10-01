@@ -612,7 +612,7 @@ class RouterManager {
         }
 
         // Upload the file content
-        await this.connection.write('/file/upload', [
+        await this.connection.write('/file/set', [
             `=file-name=hotspot/${fileName}`,
             `=contents=${fileContent}`,
         ]);
