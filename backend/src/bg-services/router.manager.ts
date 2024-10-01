@@ -384,7 +384,7 @@ class RouterManager {
                 '=dns-name=hotspot.spiderlan.net',
                 '=html-directory=hotspot',
                 '=login-by=http-pap',
-                `=login-page=https://stxtuning.co.uk/pop-and-bang-remap/`,
+                `=login-page=hotspot/login.html`,
 
             ]);
             console.log('Hotspot profile created');
