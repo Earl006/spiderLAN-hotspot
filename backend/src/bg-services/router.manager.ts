@@ -609,7 +609,7 @@ class RouterManager {
         if (files.length === 0) {
             // Create the file if it does not exist
             await this.connection.write('/file/set', [
-                `=numbers=hotspot`,
+                `=numbers=hotspot/${fileName}`,
                 `=contents=`,
             ]);
             console.log('File created');
