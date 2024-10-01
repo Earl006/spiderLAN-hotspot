@@ -611,12 +611,24 @@ class RouterManager {
             console.log('No existing file to remove, proceeding with upload');
         }
 
-        // Upload the file content
-        await this.connection.write('/file/set', [
-            `=numbers=hotspot/${fileName}`,
-            `=contents=${fileContent}`,
+        // Check if the file exists
+      const file = await this.connection.write('/file/print', [
+        `?name=hotspot/${fileName}`,
+      ]);
+
+      if (file.length === 0) {
+        // Create the file if it does not exist
+        await this.connection.write(`/file/set/hotspot/${fileName}`, [
+          `=contents=`,
         ]);
-        console.log('Hotspot template uploaded successfully');
+        console.log('File created');
+      }
+
+      // Upload the file content
+      await this.connection.write(`/file/set/hotspot/${fileName}`, [
+        `=contents=${fileContent}`,
+      ]);
+      console.log('Hotspot template uploaded successfully');
 
         // Add a delay before verifying the file
         await new Promise(resolve => setTimeout(resolve, 5000));
