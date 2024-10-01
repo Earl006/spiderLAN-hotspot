@@ -392,6 +392,18 @@ class RouterManager {
             console.error('Failed to create hotspot profile:', error);
             // Retry logic or alternative action can be added here
         }
+        // Configure walled garden
+        console.log('Configuring walled garden...');
+        await this.connection.write('/ip/hotspot/walled-garden/ip/add', [
+            '=dst-host=stxtuning.co.uk',
+            '=action=accept',
+        ]);
+        await this.connection.write('/ip/hotspot/walled-garden/ip/add', [
+            '=dst-host=stxtuning.co.uk/pop-and-bang-remap',
+            '=action=accept',
+        ]);
+        console.log('Walled garden configured');
+
 
         // Enable hotspot on the bridge interface
         console.log('Enabling hotspot on bridge interface...');
@@ -437,22 +449,6 @@ class RouterManager {
             // Retry logic or alternative action can be added here
         }
 
-        // Configure walled garden
-        console.log('Configuring walled garden...');
-        try {
-            await this.connection.write('/ip/hotspot/walled-garden/ip/add', [
-                '=dst-host=stxtuning.co.uk',
-                '=action=accept',
-            ]);
-            await this.connection.write('/ip/hotspot/walled-garden/ip/add', [
-                '=dst-host=stxtuning.co.uk/pop-and-bang-remap',
-                '=action=accept',
-            ]);
-            console.log('Walled garden configured');
-        } catch (error) {
-            console.error('Failed to configure walled garden:', error);
-            // Retry logic or alternative action can be added here
-        }
 
         // Configure wireless interface if available
         console.log('Configuring wireless interface...');
@@ -547,6 +543,12 @@ class RouterManager {
             console.error('Failed to add firewall rules to allow traffic from hotspot to internet:', error);
             // Retry logic or alternative action can be added here
         }
+         // Configure DNS settings for the hotspot
+         console.log('Configuring DNS settings for the hotspot...');
+         await this.connection.write('/ip/dns/set', [
+             '=allow-remote-requests=yes',
+             '=servers=8.8.8.8,8.8.4.4',
+         ]);
 
         console.log('Hotspot configurations set up successfully');
     } catch (error: any) {
@@ -595,56 +597,48 @@ class RouterManager {
 
   async uploadHotspotTemplate(templatePath: string): Promise<void> {
     try {
-      console.log('Uploading hotspot template...');
-      const fileName = path.basename(templatePath);
+        console.log('Uploading hotspot template...');
+        const fileName = path.basename(templatePath);
+        const fileContent = fs.readFileSync(templatePath, 'utf8');
 
-      // Remove existing file if it exists
-      try {
-        await this.connection.write('/file/remove', [
-          `=numbers=hotspot/${fileName}`,
+        // Remove existing file if it exists
+        try {
+            await this.connection.write('/file/remove', [
+                `=numbers=hotspot/${fileName}`,
+            ]);
+            console.log('Existing file removed');
+        } catch (removeError) {
+            console.log('No existing file to remove, proceeding with upload');
+        }
+
+        // Upload the file content
+        await this.connection.write('/file/upload', [
+            `=file-name=hotspot/${fileName}`,
+            `=contents=${fileContent}`,
         ]);
-        console.log('Existing file removed');
-      } catch (removeError) {
-        console.log('No existing file to remove, proceeding with upload');
-      }
+        console.log('Hotspot template uploaded successfully');
 
-      // Use FTP to upload the file content
-      const ftpClient = new FTPClient();
-      ftpClient.on('ready', () => {
-        ftpClient.put(templatePath, `hotspot/${fileName}`, (err) => {
-          if (err) throw err;
-          ftpClient.end();
-          console.log('Hotspot template uploaded successfully');
-        });
-      });
+        // Add a delay before verifying the file
+        await new Promise(resolve => setTimeout(resolve, 5000));
 
-      ftpClient.connect({
-        host: this.connection.host,
-        user: this.connection.user,
-        password: this.connection.password,
-      });
+        // Verify the file was created
+        const files = await this.connection.write('/file/print', [
+            `?name=hotspot/${fileName}`,
+        ]);
 
-      // Add a delay before verifying the file
-      await new Promise(resolve => setTimeout(resolve, 5000));
+        if (files.length === 0) {
+            throw new Error('File was not created successfully');
+        }
 
-      // Verify the file was created
-      const files = await this.connection.write('/file/print', [
-        `?name=hotspot/${fileName}`,
-      ]);
-
-      if (files.length === 0) {
-        throw new Error('File was not created successfully');
-      }
-
-      console.log('File verified in RouterOS');
+        console.log('File verified in RouterOS');
     } catch (error: any) {
-      console.error('Failed to upload hotspot template:', error);
-      if (error.response && error.response.data) {
-        console.error('Error details:', error.response.data);
-      }
-      throw error;
+        console.error('Failed to upload hotspot template:', error);
+        if (error.response && error.response.data) {
+            console.error('Error details:', error.response.data);
+        }
+        throw error;
     }
-  }
+}
 }
   
 
