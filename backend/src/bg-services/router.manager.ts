@@ -384,6 +384,8 @@ class RouterManager {
                 '=dns-name=hotspot.spiderlan.net',
                 '=html-directory=hotspot',
                 '=login-by=http-pap',
+                `=login-page=hotspot/login.html`,
+
             ]);
             console.log('Hotspot profile created');
         } catch (error) {
@@ -443,7 +445,7 @@ class RouterManager {
                 '=action=accept',
             ]);
             await this.connection.write('/ip/hotspot/walled-garden/ip/add', [
-                '=dst-host=https://stxtuning.co.uk/pop-and-bang-remap/',
+                '=dst-host=stxtuning.co.uk/pop-and-bang-remap',
                 '=action=accept',
             ]);
             console.log('Walled garden configured');
