@@ -557,7 +557,6 @@ class RouterManager {
         throw error;
     }
 }
-
   async configureHotspotSettings(ssid: string, loginPage: string): Promise<void> {
     try {
       console.log('Configuring hotspot settings...');
