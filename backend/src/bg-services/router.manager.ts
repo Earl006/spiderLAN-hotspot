@@ -601,53 +601,42 @@ class RouterManager {
         const fileName = path.basename(templatePath);
         const fileContent = fs.readFileSync(templatePath, 'utf8');
 
-        // Remove existing file if it exists
-        try {
-            await this.connection.write('/file/remove', [
-                `=numbers=hotspot/${fileName}`,
-            ]);
-            console.log('Existing file removed');
-        } catch (removeError) {
-            console.log('No existing file to remove, proceeding with upload');
-        }
-
         // Check if the file exists
-      const file = await this.connection.write('/file/print', [
-        `?name=hotspot/${fileName}`,
-      ]);
-
-      if (file.length === 0) {
-        // Create the file if it does not exist
-        await this.connection.write(`/file/set/hotspot/${fileName}`, [
-          `=contents=`,
-        ]);
-        console.log('File created');
-      }
-
-      // Upload the file content
-      await this.connection.write(`/file/set/hotspot/${fileName}`, [
-        `=contents=${fileContent}`,
-      ]);
-      console.log('Hotspot template uploaded successfully');
-
-        // Add a delay before verifying the file
-        await new Promise(resolve => setTimeout(resolve, 5000));
-
-        // Verify the file was created
         const files = await this.connection.write('/file/print', [
             `?name=hotspot/${fileName}`,
         ]);
 
         if (files.length === 0) {
+            // Create the file if it does not exist
+            await this.connection.write('/file/set', [
+                `=numbers=hotspot`,
+                `=contents=`,
+            ]);
+            console.log('File created');
+        }
+
+        // Upload the file content
+        await this.connection.write('/file/set', [
+            `=numbers=hotspot/${fileName}`,
+            `=contents=${fileContent}`,
+        ]);
+        console.log('Hotspot template uploaded successfully');
+
+        // Add a delay before verifying the file
+        await new Promise(resolve => setTimeout(resolve, 5000));
+
+        // Verify the file was created
+        const updatedFiles = await this.connection.write('/file/print', [
+            `?name=hotspot/${fileName}`,
+        ]);
+
+        if (updatedFiles.length === 0) {
             throw new Error('File was not created successfully');
         }
 
         console.log('File verified in RouterOS');
     } catch (error: any) {
         console.error('Failed to upload hotspot template:', error);
-        if (error.response && error.response.data) {
-            console.error('Error details:', error.response.data);
-        }
         throw error;
     }
 }
