@@ -48,23 +48,25 @@ class RouterManager {
 
   async configureHotspotRedirect(loginPage: string): Promise<void> {
     try {
-      console.log('Configuring hotspot redirect...');
-      await this.connection.write('/ip/hotspot/profile/set', [
-        '=numbers=hsprof1', // Use the profile name you created in setupHotspotConfigurations
-        '=login-by=cookie,http-chap,http-pap,mac-cookie',
-        '=html-directory=hotspot',
-        '=http-cookie-lifetime=3d',
-        `=login-url=${loginPage}`,
-      ]);
-      console.log('Hotspot redirect configured successfully');
+        console.log('Configuring hotspot redirect...');
+        await this.connection.write('/ip/hotspot/profile/set', [
+            '=numbers=hsprof1', // Use the profile name you created in setupHotspotConfigurations
+            '=login-by=cookie,http-chap,http-pap,mac-cookie',
+            '=html-directory=hotspot',
+            '=http-cookie-lifetime=3d',
+            `=login-page=${loginPage}`,
+        ]);
+        console.log('Hotspot redirect configured successfully');
     } catch (error: any) {
-      console.error('Failed to configure hotspot redirect:', error);
-      if (error.response && error.response.data) {
-        console.error('Error details:', error.response.data);
-      }
-      throw error;
+        console.error('Failed to configure hotspot redirect:', error);
+        if (error.response && error.response.data) {
+            console.error('Error details:', error.response.data);
+        } else {
+            console.error('Error details:', error.message);
+        }
+        throw error;
     }
-  }
+}
 
   // async cleanupHotspotConfigurations(): Promise<void> {
   //   try {
@@ -563,13 +565,13 @@ class RouterManager {
     try {
       console.log('Configuring hotspot settings...');
   
-      // Configure hotspot profile
-      await this.connection.write('/ip/hotspot/profile/set', [
-        '=numbers=hsprof1',
-        '=login-by=cookie,http-chap,http-pap,mac-cookie',
-        '=html-directory=hotspot',
-        '=http-cookie-lifetime=3d',
-      ]);
+         // Configure hotspot profile
+     await this.connection.write('/ip/hotspot/profile/set', [
+      '=numbers=hsprof1',
+      '=login-by=http-chap,http-pap,mac-cookie',
+      '=html-directory=hotspot',
+      `=login-page=${loginPage}`,
+    ]);
   
       // Set login page separately
       await this.connection.write('/ip/hotspot/profile/set', [
@@ -595,50 +597,59 @@ class RouterManager {
     }
   }
 
+ 
   async uploadHotspotTemplate(templatePath: string): Promise<void> {
     try {
         console.log('Uploading hotspot template...');
         const fileName = path.basename(templatePath);
-        const fileContent = fs.readFileSync(templatePath, 'utf8');
 
-        // Check if the file exists
-        const files = await this.connection.write('/file/print', [
-            `?name=hotspot/${fileName}`,
-        ]);
-
-        if (files.length === 0) {
-            // Create the file if it does not exist
-            await this.connection.write('/file/set', [
-                `=numbers=hotspot/${fileName}`,
-                `=contents=`,
+        // Remove existing file if it exists
+        try {
+            await this.connection.write('/file/remove', [
+                `=name=hotspot/${fileName}`,
             ]);
-            console.log('File created');
+        } catch (removeError) {
+            console.log('No existing file to remove');
         }
 
-        // Upload the file content
-        await this.connection.write('/file/set', [
-            `=numbers=hotspot/${fileName}`,
-            `=contents=${fileContent}`,
-        ]);
-        console.log('Hotspot template uploaded successfully');
+        // Use FTP to upload the file content
+        const ftpClient = new FTPClient();
+        ftpClient.on('ready', () => {
+            ftpClient.put(templatePath, `hotspot/${fileName}`, (err) => {
+                if (err) throw err;
+                ftpClient.end();
+            });
+        });
+
+        ftpClient.connect({
+            host: this.connection.host,
+            user: this.connection.user,
+            password: this.connection.password,
+        });
 
         // Add a delay before verifying the file
         await new Promise(resolve => setTimeout(resolve, 5000));
 
         // Verify the file was created
-        const updatedFiles = await this.connection.write('/file/print', [
+        const files = await this.connection.write('/file/print', [
             `?name=hotspot/${fileName}`,
         ]);
 
-        if (updatedFiles.length === 0) {
-            throw new Error('File was not created successfully');
+        if (files.length === 0) {
+            throw new Error('File upload failed');
         }
 
         console.log('File verified in RouterOS');
+
+     
     } catch (error: any) {
         console.error('Failed to upload hotspot template:', error);
+        if (error.response && error.response.data) {
+            console.error('Error details:', error.response.data);
+        }
         throw error;
     }
+    // await this.configureHotspotRedirect('login.html');
 }
 }
   
