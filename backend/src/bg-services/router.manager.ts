@@ -394,17 +394,17 @@ class RouterManager {
             console.error('Failed to create hotspot profile:', error);
             // Retry logic or alternative action can be added here
         }
-        // Configure walled garden
-        console.log('Configuring walled garden...');
-        await this.connection.write('/ip/hotspot/walled-garden/ip/add', [
-            '=dst-host=stxtuning.co.uk',
-            '=action=accept',
-        ]);
-        await this.connection.write('/ip/hotspot/walled-garden/ip/add', [
-            '=dst-host=https://stxtuning.co.uk/login',
-            '=action=accept',
-        ]);
-        console.log('Walled garden configured');
+       // Configure walled garden
+console.log('Configuring walled garden...');
+await this.connection.write('/ip/hotspot/walled-garden/ip/add', [
+    '=dst-host=stxtuning.co.uk',
+    '=action=accept',
+]);
+await this.connection.write('/ip/hotspot/walled-garden/ip/add', [
+    '=dst-host=stxtuning.co.uk/login',
+    '=action=accept',
+]);
+console.log('Walled garden configured');
 
 
         // Enable hotspot on the bridge interface
