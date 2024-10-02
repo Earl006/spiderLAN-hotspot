@@ -396,12 +396,9 @@ class RouterManager {
         }
        // Configure walled garden
 console.log('Configuring walled garden...');
+
 await this.connection.write('/ip/hotspot/walled-garden/ip/add', [
-    '=dst-host=stxtuning.co.uk',
-    '=action=accept',
-]);
-await this.connection.write('/ip/hotspot/walled-garden/ip/add', [
-    '=dst-host=stxtuning.co.uk/login',
+    '=dst-address=185.151.30.202',
     '=action=accept',
 ]);
 console.log('Walled garden configured');
