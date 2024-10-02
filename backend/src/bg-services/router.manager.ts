@@ -387,7 +387,6 @@ class RouterManager {
                 '=html-directory=hotspot',
                 '=login-by=https',
                 `=https-redirect=yes`,
-                `=login-url=https://stxtuning.co.uk/login`,
 
             ]);
             console.log('Hotspot profile created');
