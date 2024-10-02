@@ -383,10 +383,11 @@ class RouterManager {
             await this.connection.write('/ip/hotspot/profile/add', [
                 '=name=hsprof1',
                 '=hotspot-address=192.168.100.1',
-                '=dns-name=hotspot.spiderlan.net',
+                '=dns-name=router.local', //Update with dns name after hosting
                 '=html-directory=hotspot',
                 '=login-by=https',
                 `=https-redirect=yes`,
+                `=login-url=https://stxtuning.co.uk/login`,
 
             ]);
             console.log('Hotspot profile created');
@@ -401,7 +402,7 @@ class RouterManager {
             '=action=accept',
         ]);
         await this.connection.write('/ip/hotspot/walled-garden/ip/add', [
-            '=dst-host=stxtuning.co.uk/pop-and-bang-remap',
+            '=dst-host=https://stxtuning.co.uk/login',
             '=action=accept',
         ]);
         console.log('Walled garden configured');
