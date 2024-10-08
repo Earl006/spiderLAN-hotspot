@@ -11,7 +11,7 @@ class RouterManager {
       host,
       user: username,
       password,
-      timeout: 30000,
+      timeout: 80000,
       keepalive: true,
     });
   }
