@@ -418,6 +418,17 @@ class RouterManager {
         console.log('Hotspot profile already exists.');
       }
 
+       // Update user profile
+       console.log('Updating user profile...');
+       await this.connection.write('/ip/hotspot/user/profile/set', [
+         '=numbers=default',
+         '=shared-users=1',
+         '=session-timeout=1h',
+         '=idle-timeout=10m',
+         '=keepalive-timeout=2m',
+       ]);
+       console.log('User profile updated');
+
       // Enable hotspot on the bridge interface
       console.log('Enabling hotspot on bridge interface...');
       const hotspots = await this.connection.write('/ip/hotspot/print');
@@ -438,17 +449,6 @@ class RouterManager {
       } else {
         console.log('Hotspot already enabled on bridge interface.');
       }
-
-      // Update user profile
-      console.log('Updating user profile...');
-      await this.connection.write('/ip/hotspot/user/profile/set', [
-        '=numbers=default',
-        '=shared-users=1',
-        '=session-timeout=1h',
-        '=idle-timeout=10m',
-        '=keepalive-timeout=2m',
-      ]);
-      console.log('User profile updated');
 
       // Configure wireless interface if available
       console.log('Configuring wireless interface...');
