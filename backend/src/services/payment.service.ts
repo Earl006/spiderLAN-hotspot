@@ -84,15 +84,9 @@ export class PaymentService {
           await this.createSubscriptionFromPayment(invoiceId);
           return { status: 'SUCCESS', message: 'Payment successful and subscription created' };
         case 'FAILED':
-          await this.updatePaymentStatus(invoiceId, 'SUCCESS');
-          await this.createSubscriptionFromPayment(invoiceId);
-          return { status: 'SUCCESS', message: 'Payment successful and subscription created' };
-          // await this.updatePaymentStatus(invoiceId, 'FAILED', paymentStatus.invoice.failed_reason);
-          // return { status: 'FAILED', message: `Payment failed: ${paymentStatus.invoice.failed_reason}` };
+          await this.updatePaymentStatus(invoiceId, 'FAILED', paymentStatus.invoice.failed_reason);
+          return { status: 'FAILED', message: `Payment failed: ${paymentStatus.invoice.failed_reason}` };
         case 'PENDING':
-          await this.updatePaymentStatus(invoiceId, 'SUCCESS');
-          await this.createSubscriptionFromPayment(invoiceId);
-          return { status: 'SUCCESS', message: 'Payment successful and subscription created' };
         case 'PROCESSING':
           // Wait for 60 seconds before checking again
           await new Promise(resolve => setTimeout(resolve, 60000));

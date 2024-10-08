@@ -1,19 +1,104 @@
-<html>
+<!-- login.html -->
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <title>SpiderLAN Wireless</title>
+  <meta charset="UTF-8">
+  <title>SpiderLAN Hotspot Login</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-image: url('background.jpg');
+      background-size: cover;
+      margin: 0;
+      padding: 0;
+    }
+    .overlay {
+      background-color: rgba(0, 0, 0, 0.6);
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+    }
+    .container {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .login-box {
+      background-color: rgba(255, 255, 255, 0.9);
+      padding: 40px;
+      border-radius: 8px;
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+    }
+    .login-box h1 {
+      margin-bottom: 30px;
+      color: #333;
+    }
+    .login-box input[type="text"],
+    .login-box input[type="password"] {
+      width: 100%;
+      padding: 12px 20px;
+      margin: 8px 0;
+      box-sizing: border-box;
+      border: none;
+      border-bottom: 2px solid #333;
+      background-color: transparent;
+      font-size: 16px;
+    }
+    .login-box button {
+      background-color: #ff5722;
+      color: white;
+      padding: 14px 20px;
+      margin-top: 20px;
+      border: none;
+      cursor: pointer;
+      width: 100%;
+      font-size: 18px;
+      border-radius: 4px;
+    }
+    .login-box button:hover {
+      background-color: #e64a19;
+    }
+    .login-box p {
+      margin-top: 20px;
+      color: #666;
+    }
+    .login-box a {
+      color: #ff5722;
+      text-decoration: none;
+    }
+    .login-box a:hover {
+      text-decoration: underline;
+    }
+    @media (max-width: 600px) {
+      .login-box {
+        padding: 20px;
+      }
+    }
+  </style>
 </head>
 <body>
-    <form name="redirect" action="https://stxtuning.co.uk/login" method="get">
+  <div class="overlay"></div>
+  <div class="container">
+    <div class="login-box">
+      <h1>Welcome to SpiderLAN</h1>
+      <form action="/login" method="post">
+        <input type="text" name="username" placeholder="Username" required>
+        <input type="password" name="password" placeholder="Password" required>
         <input type="hidden" name="mac" value="$(mac)">
         <input type="hidden" name="ip" value="$(ip)">
-        <input type="hidden" name="username" value="$(username)">
         <input type="hidden" name="link-login" value="$(link-login)">
         <input type="hidden" name="link-orig" value="$(link-orig)">
-    </form>
-    <script>
-        console.log("Captured IP: $(ip)");
-        console.log("Captured MAC: $(mac)");
-        document.redirect.submit();
-    </script>
+        <button type="submit">Login</button>
+      </form>
+      <p>Don't have an account? <a href="/signup">Sign up now</a></p>
+    </div>
+  </div>
 </body>
 </html>

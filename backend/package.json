@@ -3,9 +3,11 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-   "build": "tsc && copyfiles -u 1 src/bg-services/templates/*.html dist/bg-services/templates/",
     "start": "node dist/server.js",
-    "dev": "node --watch --trace-warnings dist/server.js"
+    "dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/server.ts",
+    "build": "tsc",
+    "prod": "ts-node src/server.ts",
+    "migrate": "prisma migrate deploy"
   },
   "keywords": [],
   "author": "",

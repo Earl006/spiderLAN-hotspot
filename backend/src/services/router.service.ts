@@ -34,7 +34,7 @@ class RouterService {
       if (this.routerManager) {
         try {
           // Setup hotspot configurations
-          await this.routerManager.setupHotspotConfigurations();
+          await this.routerManager.setupHotspotConfigurations('SPIDERLAN');
           console.log('Hotspot configurations completed successfully');
   
           // Upload template
