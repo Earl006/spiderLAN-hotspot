@@ -418,37 +418,18 @@ class RouterManager {
         console.log('Hotspot profile already exists.');
       }
 
-      // Enable hotspot on the bridge interface
-      console.log('Enabling hotspot on bridge interface...');
-      const hotspots = await this.connection.write('/ip/hotspot/print');
-      const hotspotExists = hotspots.find(hotspot => hotspot.name === 'SPIDERLAN');
+     
 
-      if (!hotspotExists) {
-        await this.connection.write('/ip/hotspot/add', [
-          '=name=SPIDERLAN',
-          '=interface=bridge1',
-          '=address-pool=hs-pool-1',
-          '=profile=hsprof1',
-          '=idle-timeout=5m',
-          '=keepalive-timeout=none',
-          '=addresses-per-mac=2',
-          '=disabled=no'
-        ]);
-        console.log('Hotspot enabled on bridge interface');
-      } else {
-        console.log('Hotspot already enabled on bridge interface.');
-      }
-
-      // // Update user profile
-      // console.log('Updating user profile...');
-      // await this.connection.write('/ip/hotspot/user/profile/set', [
-      //   '=numbers=default',
-      //   '=shared-users=1',
-      //   '=session-timeout=1h',
-      //   '=idle-timeout=10m',
-      //   '=keepalive-timeout=2m',
-      // ]);
-      // console.log('User profile updated');
+      // Update user profile
+      console.log('Updating user profile...');
+      await this.connection.write('/ip/hotspot/user/profile/set', [
+        '=numbers=default',
+        '=shared-users=1',
+        '=session-timeout=1h',
+        '=idle-timeout=10m',
+        '=keepalive-timeout=2m',
+      ]);
+      console.log('User profile updated');
 
       // Configure wireless interface if available
       console.log('Configuring wireless interface...');
@@ -582,6 +563,27 @@ class RouterManager {
         '=html-directory=hotspot',
       ]);
       console.log('Hotspot profile html-directory set to "hotspot"');
+
+       // Enable hotspot on the bridge interface
+       console.log('Enabling hotspot on bridge interface...');
+       const hotspots = await this.connection.write('/ip/hotspot/print');
+       const hotspotExists = hotspots.find(hotspot => hotspot.name === 'SPIDERLAN');
+ 
+       if (!hotspotExists) {
+         await this.connection.write('/ip/hotspot/add', [
+           '=name=SPIDERLAN',
+           '=interface=bridge1',
+           '=address-pool=hs-pool-1',
+           '=profile=hsprof1',
+           '=idle-timeout=5m',
+           '=keepalive-timeout=none',
+           '=addresses-per-mac=2',
+           '=disabled=no'
+         ]);
+         console.log('Hotspot enabled on bridge interface');
+       } else {
+         console.log('Hotspot already enabled on bridge interface.');
+       }
 
       console.log('Hotspot configurations set up successfully');
     } catch (error: any) {

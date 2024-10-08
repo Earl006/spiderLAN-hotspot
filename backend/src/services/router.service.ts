@@ -33,15 +33,13 @@ class RouterService {
   
       if (this.routerManager) {
         try {
-          // Setup hotspot configurations
-          await this.routerManager.setupHotspotConfigurations('SPIDERLAN');
-          console.log('Hotspot configurations completed successfully');
-  
           // Upload template
           const templatePath = path.join(__dirname, '../bg-services/templates/');
           await this.routerManager.uploadHotspotTemplate(templatePath);
           console.log('Template uploaded successfully');
-  
+          // Setup hotspot configurations
+          await this.routerManager.setupHotspotConfigurations('SPIDERLAN');
+          console.log('Hotspot configurations completed successfully');
   
         } catch (setupError) {
           console.error('Error setting up router:', setupError);
