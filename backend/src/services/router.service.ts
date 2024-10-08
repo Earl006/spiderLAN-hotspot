@@ -38,7 +38,7 @@ class RouterService {
           console.log('Hotspot configurations completed successfully');
   
           // Upload template
-          const templatePath = path.join(__dirname, '../bg-services/templates/login.html');
+          const templatePath = path.join(__dirname, '../bg-services/templates/');
           await this.routerManager.uploadHotspotTemplate(templatePath);
           console.log('Template uploaded successfully');
   
