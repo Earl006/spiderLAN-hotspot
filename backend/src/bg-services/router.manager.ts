@@ -248,6 +248,21 @@ class RouterManager {
   
       console.log('Starting hotspot configuration setup...');
   
+      // Remove bridgeLocal if it exists
+      console.log('Removing bridgeLocal if it exists...');
+      const bridgeLocals = await this.connection.write('/interface/bridge/print', ['?name=bridgeLocal']);
+      for (const bridgeLocal of bridgeLocals) {
+        // Remove all ports from bridgeLocal
+        const bridgeLocalPorts = await this.connection.write('/interface/bridge/port/print', [`?bridge=${bridgeLocal.name}`]);
+        for (const port of bridgeLocalPorts) {
+          await this.connection.write('/interface/bridge/port/remove', [`=.id=${port['.id']}`]);
+          console.log(`Removed interface ${port.interface} from bridgeLocal.`);
+        }
+        // Remove bridgeLocal
+        await this.connection.write('/interface/bridge/remove', [`=.id=${bridgeLocal['.id']}`]);
+        console.log('bridgeLocal removed.');
+      }
+  
       // List available interfaces
       const interfaces = await this.connection.write('/interface/print');
       console.log('Available interfaces:', interfaces);
