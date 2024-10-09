@@ -481,7 +481,7 @@ class RouterManager {
         await this.connection.write('/ip/dhcp-server/network/add', [
           '=address=192.168.100.0/24',
           '=gateway=192.168.100.1',
-          '=dns-server=8.8.8.8,8.8.4.4',
+          '=dns-server=192.168.100.1,8.8.8.8,8.8.4.4',
         ]);
         console.log('DHCP network set up.');
       } else {
