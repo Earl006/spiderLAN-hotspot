@@ -245,25 +245,25 @@ class RouterManager {
       if (!this.connection) {
         throw new Error('Router connection is not initialized.');
       }
-
+  
       console.log('Starting hotspot configuration setup...');
-
+  
       // List available interfaces
       const interfaces = await this.connection.write('/interface/print');
       console.log('Available interfaces:', interfaces);
-
+  
       const ethInterfaces = interfaces.filter((iface: any) => iface.name.startsWith('ether'));
       console.log('Ethernet interfaces:', ethInterfaces);
-
+  
       if (ethInterfaces.length < 1) {
         throw new Error('At least one ethernet interface is required.');
       }
-
+  
       // Remove ether1 from any bridge or switch configuration
       console.log('Removing ether1 from any bridge or switch configuration...');
       const bridgePorts = await this.connection.write('/interface/bridge/port/print');
       const ether1Port = bridgePorts.find((port: any) => port.interface === 'ether1');
-
+  
       if (ether1Port) {
         await this.connection.write('/interface/bridge/port/remove', [
           `=.id=${ether1Port['.id']}`,
@@ -272,19 +272,19 @@ class RouterManager {
       } else {
         console.log('ether1 is not part of any bridge or switch configuration.');
       }
-
+  
       // Remove existing DHCP client on ether1
       console.log('Checking for existing DHCP client on ether1...');
       const dhcpClients = await this.connection.write('/ip/dhcp-client/print');
       const ether1DhcpClient = dhcpClients.find((client: any) => client.interface === 'ether1');
-
+  
       if (ether1DhcpClient) {
         await this.connection.write('/ip/dhcp-client/remove', [
           `=.id=${ether1DhcpClient['.id']}`,
         ]);
         console.log('Removed existing DHCP client on ether1.');
       }
-
+  
       // Configure ether1 as WAN interface
       console.log('Configuring ether1 as WAN interface...');
       await this.connection.write('/ip/dhcp-client/add', [
@@ -292,13 +292,16 @@ class RouterManager {
         '=disabled=no',
       ]);
       console.log('DHCP client added on ether1 as WAN interface.');
-
+  
+      // Add a delay to allow DHCP client to obtain IP
+      await new Promise(resolve => setTimeout(resolve, 2000)); // 2-second delay
+  
       // Create a bridge for the hotspot if it doesn't exist
       console.log('Creating bridge...');
       const existingBridges = await this.connection.write('/interface/bridge/print', [
         '?name=bridge1',
       ]);
-
+  
       if (existingBridges.length === 0) {
         await this.connection.write('/interface/bridge/add', [
           '=name=bridge1',
@@ -307,17 +310,17 @@ class RouterManager {
       } else {
         console.log('bridge1 already exists.');
       }
-
+  
       // Add ethernet interfaces (except ether1) to the bridge
       console.log('Adding interfaces to bridge...');
       const currentBridgePorts = await this.connection.write('/interface/bridge/port/print');
-
+  
       for (const ethInterface of ethInterfaces) {
         if (ethInterface.name !== 'ether1') {
           const isAlreadyInBridge = currentBridgePorts.some(
             (port: any) => port.interface === ethInterface.name && port.bridge === 'bridge1'
           );
-
+  
           if (!isAlreadyInBridge) {
             // Remove from any other bridge
             const existingPort = currentBridgePorts.find((port: any) => port.interface === ethInterface.name);
@@ -327,7 +330,7 @@ class RouterManager {
               ]);
               console.log(`Removed ${ethInterface.name} from existing bridge.`);
             }
-
+  
             // Add to bridge1
             await this.connection.write('/interface/bridge/port/add', [
               '=bridge=bridge1',
@@ -339,12 +342,15 @@ class RouterManager {
           }
         }
       }
-
+  
+      // Add a delay to allow interfaces to be added to the bridge
+      await new Promise(resolve => setTimeout(resolve, 2000)); // 2-second delay
+  
       // Configure wireless interface if available
       console.log('Configuring wireless interface...');
       const wirelessInterfaces = await this.connection.write('/interface/wireless/print');
       const wlan1 = wirelessInterfaces.find((iface: any) => iface.name === 'wlan1');
-
+  
       if (wlan1) {
         // Disable CAPsMAN management for wlan1 if applicable
         console.log('Disabling CAPsMAN management for wlan1...');
@@ -352,7 +358,7 @@ class RouterManager {
           '=enabled=no',
         ]);
         console.log('CAPsMAN management disabled for wlan1.');
-
+  
         // Configure the wireless interface
         await this.connection.write('/interface/wireless/set', [
           `=numbers=${wlan1.name}`,
@@ -361,10 +367,10 @@ class RouterManager {
           '=disabled=no',
         ]);
         console.log('Wireless interface configured.');
-
+  
         // Check if wlan1 is already in a bridge
         const wlanBridgePort = currentBridgePorts.find((port: any) => port.interface === 'wlan1');
-
+  
         if (!wlanBridgePort) {
           // Add wireless interface to bridge
           await this.connection.write('/interface/bridge/port/add', [
@@ -388,14 +394,17 @@ class RouterManager {
       } else {
         console.log('No wireless interface found, skipping wireless configuration.');
       }
-
+  
+      // Add a delay before proceeding
+      await new Promise(resolve => setTimeout(resolve, 2000)); // 2-second delay
+  
       // Set up IP address for the hotspot
       console.log('Setting up IP address for hotspot...');
       const ipAddresses = await this.connection.write('/ip/address/print');
       const hotspotIP = ipAddresses.find(
         (addr: any) => addr.address.startsWith('192.168.100.1/24') && addr.interface === 'bridge1'
       );
-
+  
       if (!hotspotIP) {
         await this.connection.write('/ip/address/add', [
           '=address=192.168.100.1/24',
@@ -405,12 +414,15 @@ class RouterManager {
       } else {
         console.log('IP address for hotspot already configured.');
       }
-
+  
+      // Add a delay
+      await new Promise(resolve => setTimeout(resolve, 2000)); // 2-second delay
+  
       // Create IP pool for hotspot clients
       console.log('Creating IP pool for hotspot clients...');
       const ipPools = await this.connection.write('/ip/pool/print');
       const hsPool = ipPools.find((pool: any) => pool.name === 'hs-pool-1');
-
+  
       if (!hsPool) {
         await this.connection.write('/ip/pool/add', [
           '=name=hs-pool-1',
@@ -420,12 +432,15 @@ class RouterManager {
       } else {
         console.log('IP pool for hotspot clients already exists.');
       }
-
+  
+      // Add a delay
+      await new Promise(resolve => setTimeout(resolve, 2000)); // 2-second delay
+  
       // Set up DHCP server
       console.log('Setting up DHCP server...');
       const dhcpServers = await this.connection.write('/ip/dhcp-server/print');
       const dhcp1 = dhcpServers.find((server: any) => server.name === 'dhcp1');
-
+  
       if (!dhcp1) {
         await this.connection.write('/ip/dhcp-server/add', [
           '=name=dhcp1',
@@ -438,12 +453,15 @@ class RouterManager {
       } else {
         console.log('DHCP server already exists.');
       }
-
+  
+      // Add a delay
+      await new Promise(resolve => setTimeout(resolve, 2000)); // 2-second delay
+  
       // Set up DHCP network with DNS servers
       console.log('Setting up DHCP network...');
       const dhcpNetworks = await this.connection.write('/ip/dhcp-server/network/print');
       const dhcpNetwork = dhcpNetworks.find((network: any) => network.address === '192.168.100.0/24');
-
+  
       if (!dhcpNetwork) {
         await this.connection.write('/ip/dhcp-server/network/add', [
           '=address=192.168.100.0/24',
@@ -454,12 +472,15 @@ class RouterManager {
       } else {
         console.log('DHCP network already configured.');
       }
-
+  
+      // Add a delay
+      await new Promise(resolve => setTimeout(resolve, 2000)); // 2-second delay
+  
       // Create hotspot profile
       console.log('Creating hotspot profile...');
       const hotspotProfiles = await this.connection.write('/ip/hotspot/profile/print');
       const hsprof1 = hotspotProfiles.find((profile: any) => profile.name === 'hsprof1');
-
+  
       if (!hsprof1) {
         await this.connection.write('/ip/hotspot/profile/add', [
           '=name=hsprof1',
@@ -473,7 +494,10 @@ class RouterManager {
       } else {
         console.log('Hotspot profile hsprof1 already exists.');
       }
-
+  
+      // Add a delay
+      await new Promise(resolve => setTimeout(resolve, 2000)); // 2-second delay
+  
       // Remove conflicting firewall rules that allow hotspot bypass
       console.log('Removing conflicting firewall rules that allow hotspot bypass...');
       const firewallFilters = await this.connection.write('/ip/firewall/filter/print');
@@ -488,10 +512,13 @@ class RouterManager {
           console.log(`Removed conflicting firewall rule: ${rule.comment || rule.action}`);
         }
       }
-
+  
+      // Add a delay
+      await new Promise(resolve => setTimeout(resolve, 2000)); // 2-second delay
+  
       // Configure firewall rules to enforce hotspot authentication
       console.log('Configuring firewall rules to enforce hotspot authentication...');
-
+  
       // Allow established and related connections
       await this.connection.write('/ip/firewall/filter/add', [
         '=chain=forward',
@@ -500,7 +527,7 @@ class RouterManager {
         '=comment=Allow established and related connections',
       ]);
       console.log('Added firewall rule to allow established and related connections.');
-
+  
       // Allow hotspot to router traffic
       await this.connection.write('/ip/firewall/filter/add', [
         '=chain=forward',
@@ -510,7 +537,7 @@ class RouterManager {
         '=comment=Allow hotspot to router traffic',
       ]);
       console.log('Added firewall rule to allow hotspot to router traffic.');
-
+  
       // Allow DNS and HTTP/HTTPS traffic from hotspot clients
       await this.connection.write('/ip/firewall/filter/add', [
         '=chain=forward',
@@ -521,13 +548,16 @@ class RouterManager {
         '=comment=Allow DNS and HTTP/HTTPS traffic from hotspot clients',
       ]);
       console.log('Added firewall rule to allow DNS and HTTP/HTTPS traffic from hotspot clients.');
-
+  
+      // Add a delay
+      await new Promise(resolve => setTimeout(resolve, 2000)); // 2-second delay
+  
       // NAT masquerade for outbound traffic
       const natRules = await this.connection.write('/ip/firewall/nat/print');
       const natRuleExists = natRules.find(
         (rule: any) => rule.chain === 'srcnat' && rule.action === 'masquerade' && rule['out-interface'] === 'ether1'
       );
-
+  
       if (!natRuleExists) {
         await this.connection.write('/ip/firewall/nat/add', [
           '=chain=srcnat',
@@ -539,7 +569,10 @@ class RouterManager {
       } else {
         console.log('NAT masquerade rule for WAN already exists.');
       }
-
+  
+      // Add a delay
+      await new Promise(resolve => setTimeout(resolve, 2000)); // 2-second delay
+  
       // Drop all other forward traffic
       await this.connection.write('/ip/firewall/filter/add', [
         '=chain=forward',
@@ -547,7 +580,10 @@ class RouterManager {
         '=comment=Drop all other forward traffic',
       ]);
       console.log('Added firewall rule to drop all other forward traffic.');
-
+  
+      // Add a delay
+      await new Promise(resolve => setTimeout(resolve, 2000)); // 2-second delay
+  
       // Configure DNS settings for the hotspot
       console.log('Configuring DNS settings for the hotspot...');
       await this.connection.write('/ip/dns/set', [
@@ -555,7 +591,10 @@ class RouterManager {
         '=servers=8.8.8.8,8.8.4.4',
       ]);
       console.log('DNS settings configured.');
-
+  
+      // Add a delay
+      await new Promise(resolve => setTimeout(resolve, 2000)); // 2-second delay
+  
       // Set the html-directory and ensure it is 'hotspot'
       console.log('Configuring hotspot profile html-directory...');
       await this.connection.write('/ip/hotspot/profile/set', [
@@ -563,12 +602,15 @@ class RouterManager {
         '=html-directory=hotspot',
       ]);
       console.log('Hotspot profile html-directory set to "hotspot".');
-
+  
+      // Add a delay
+      await new Promise(resolve => setTimeout(resolve, 2000)); // 2-second delay
+  
       // Enable hotspot on the bridge interface
       console.log('Enabling hotspot on bridge interface...');
       const hotspots = await this.connection.write('/ip/hotspot/print');
       const hotspotExists = hotspots.find((hotspot: any) => hotspot.name === 'SPIDERLAN');
-
+  
       if (!hotspotExists) {
         await this.connection.write('/ip/hotspot/add', [
           '=name=SPIDERLAN',
@@ -583,7 +625,7 @@ class RouterManager {
         console.log('Hotspot SPIDERLAN enabled on bridge1.');
       } else {
         console.log('Hotspot SPIDERLAN already exists.');
-
+  
         // Ensure the hotspot is enabled
         if (hotspotExists.disabled === 'true') {
           await this.connection.write('/ip/hotspot/enable', [
@@ -594,7 +636,10 @@ class RouterManager {
           console.log('Hotspot SPIDERLAN is already enabled.');
         }
       }
-
+  
+      // Add a delay
+      await new Promise(resolve => setTimeout(resolve, 2000)); // 2-second delay
+  
       console.log('Hotspot configurations set up successfully.');
     } catch (error: any) {
       console.error('Failed to set up hotspot configurations:', error);
@@ -642,39 +687,58 @@ class RouterManager {
     try {
       console.log('Uploading hotspot templates...');
       const files = fs.readdirSync(templateDir);
-
+  
       // Use FTP to upload the files to the router
       const ftpClient = new FTPClient();
       ftpClient.on('ready', () => {
         files.forEach(file => {
-          ftpClient.put(path.join(templateDir, file), `hotspot/${file}`, (err) => {
-            if (err) throw err;
-            console.log(`Uploaded ${file} to router`);
-          });
+          // Ensure that only HTML, CSS, JS files are uploaded to the hotspot directory
+          if (/\.(html|css|js|ico|svg|json)$/i.test(file)) {
+            ftpClient.put(path.join(templateDir, file), `hotspot/${file}`, (err) => {
+              if (err) {
+                console.error(`Failed to upload ${file}:`, err);
+              } else {
+                console.log(`Uploaded ${file} to router`);
+              }
+            });
+          } else {
+            console.log(`Skipped uploading unsupported file type: ${file}`);
+          }
         });
-        ftpClient.end();
+        // Close the FTP connection after a short delay to ensure all uploads are processed
+        setTimeout(() => {
+          ftpClient.end();
+          console.log('All hotspot templates uploaded.');
+        }, 5000); // 5-second delay
       });
-
+  
+      ftpClient.on('error', (err) => {
+        console.error('FTP Connection Error:', err);
+        throw err;
+      });
+  
       ftpClient.connect({
         host: this.connection.host,
         user: this.connection.user,
         password: this.connection.password,
         port: 21,
       });
-
+  
       // Add a delay before verifying the files
-      await new Promise(resolve => setTimeout(resolve, 5000));
-
-      // Verify the files were uploaded
+      await new Promise(resolve => setTimeout(resolve, 7000)); // 7-second delay
+  
+      // Verify the files were uploaded correctly
       const uploadedFiles = await this.connection.write('/file/print');
       files.forEach(file => {
-        const exists = uploadedFiles.some(f => f.name === `hotspot/${file}`);
-        if (!exists) {
-          throw new Error(`File ${file} upload failed`);
+        if (/\.(html|css|js|ico|svg|json)$/i.test(file)) {
+          const exists = uploadedFiles.some(f => f.name === `hotspot/${file}`);
+          if (!exists) {
+            throw new Error(`File ${file} upload failed`);
+          }
         }
       });
-
-      console.log('All files verified in RouterOS');
+  
+      console.log('All hotspot template files verified in RouterOS');
     } catch (error: any) {
       console.error('Failed to upload hotspot templates:', error);
       throw error;
