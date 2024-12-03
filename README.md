@@ -1,4 +1,3 @@
-```markdown
 # Hotspot Billing System  
 
 A robust and user-friendly system designed to manage internet access for hotspot users. This project combines efficient backend development with seamless payment processing to ensure a smooth user experience.  
@@ -109,5 +108,4 @@ For any questions or feedback, please reach out to [yourname](mailto:youremail@e
 
 ---  
 **[GitHub Repository](https://github.com/Earl006/spiderLAN-hotspot.git)**  
-```  
 
